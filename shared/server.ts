@@ -1,26 +1,26 @@
-import net from 'net';
 import log from '@local/shared/logger';
 import Session from '@local/shared/session';
+import net from 'net';
 
 type serverOptions<T> = {
     host?: string,
     port?: number,
     handlers: any,
     senders: T,
-    world?: any
+    world?: any,
 };
 
-class Server<T> {
+export default class Server<T> {
     host: string;
     port: number;
     sessions: Session<T>[];
 
     //static World = null;
     constructor({ host, port, handlers, senders }: serverOptions<T>) {
-        let that = this;
+        const that = this;
 
-        this.host = host;
-        this.port = port;
+        this.host = host || '127.0.0.1';
+        this.port = port || 4190;
 
         // hold current sessions
         this.sessions = [];
@@ -28,7 +28,7 @@ class Server<T> {
         const srv = net.createServer();
 
         srv.on('connection', (socket) => {
-            let session = new Session<T>({
+            const session = new Session<T>({
                 server: that,
                 socket: socket,
                 handlers: handlers,
@@ -49,5 +49,3 @@ class Server<T> {
         //find: (cb: (element: session, index: number, array: session[]) => session, thisArg?: any) => this.sessions.find(cb)
     }
 }
-
-export default Server;

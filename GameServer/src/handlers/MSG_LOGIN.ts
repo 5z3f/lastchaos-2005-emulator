@@ -1,14 +1,12 @@
 import log from '@local/shared/logger';
-import api from '../api';
-import app from '../app';
-import database from '../database';
 import Session from '@local/shared/session';
+import database from '../database';
 import { SendersType } from '../senders';
 import { DBMessageType } from '../senders/db';
 import { FailMessageType } from '../senders/fail';
 
 export default async function (session: Session<SendersType>, msg: any) {
-    let data = {
+    const data = {
         version: msg.read('u32>'),
         mode: msg.read('u8'),
         username: msg.read('stringnt'),
@@ -19,7 +17,7 @@ export default async function (session: Session<SendersType>, msg: any) {
     // TODO: check client version and if its wrong send fail message: MSG_FAIL_WRONG_VERSION
 
     // will return null if account doesn't exist or password is incorrect
-    let dbAccount = await database.accounts.getByCredentials(data.username, data.password);
+    const dbAccount = await database.accounts.getByCredentials(data.username, data.password);
 
     if (!dbAccount) {
         session.send.fail(FailMessageType.IncorrectCredentials);
@@ -32,7 +30,8 @@ export default async function (session: Session<SendersType>, msg: any) {
 
     log.data(`[IN]  >> client login request: [ver: ${data.version}, username: ${data.username}, password: ${data.password}, nation: ${data.nation}]`);
 
-    const dbCharacters = await database.accounts.getCharacters(session.accountId);
+    const accountId = session.accountId!;
+    const dbCharacters = await database.accounts.getCharacters(accountId);
 
     if (!dbCharacters) {
         //session.send.fail( ); // TODO: 

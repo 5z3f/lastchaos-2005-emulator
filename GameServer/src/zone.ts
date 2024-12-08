@@ -1,4 +1,4 @@
-import { QuadTree, Box, Point } from 'js-quadtree';
+import { Box, Point, QuadTree } from 'js-quadtree';
 
 import fs from 'fs';
 import path from 'path';
@@ -7,11 +7,11 @@ import { SmartBuffer } from 'smart-buffer';
 import Monster from './gameobject/monster';
 import NPC from './gameobject/npc';
 
-import { Statistic } from './system/core/statistic';
-import { Position } from './types';
-import Character from './gameobject/character';
 import game from './game';
 import { GameObjectType } from './gameobject';
+import Character from './gameobject/character';
+import { Statistic } from './system/core/statistic';
+import { Position } from './types';
 import { ZoneType } from './world';
 
 class GamePoint extends Point {
@@ -29,13 +29,13 @@ export enum AttributeFlags {
     STAIR_DOWN = 50,
     WARZONE = 60,
     FREEPKZONE = 70,
-    BLOCK = 255
+    BLOCK = 255,
 };
 
-class Zone {
-    npcs = [];
-    monsters = [];
-    characters = [];
+export default class Zone {
+    npcs: NPC[] = [];
+    monsters: Monster[] = [];
+    characters: Character[] = [];
     items = []; // on ground
 
     id: ZoneType;
@@ -56,11 +56,12 @@ class Zone {
         this.attributeMap = Array.from(Array(width), e => Array(height));
         this.heightMap = Array.from(Array(width), e => Array(height));
 
-        this.quadTree = new QuadTree(new Box(0, 0, width, height), {
+        const box = new Box(0, 0, width, height);
+        this.quadTree = new QuadTree(box, {
             capacity: 64,
             arePointsEqual: (p1: GamePoint, p2: GamePoint) => {
                 return (p1.uid === p2.uid && p1.x === p2.x && p1.y === p2.y);
-            }
+            },
         });
 
         this.load();
@@ -72,7 +73,7 @@ class Zone {
                 if (spawn.zoneId != this.id)
                     continue;
 
-                let monster = new Monster({
+                const monster = new Monster({
                     id: baseMonster.id,
                     flags: baseMonster.flags,
                     level: baseMonster.level,
@@ -100,7 +101,7 @@ class Zone {
                         dexterity: baseMonster.statistics.dexterity,
                         intelligence: baseMonster.statistics.intelligence,
                         condition: baseMonster.statistics.condition,
-                    }
+                    },
                 });
 
                 this.add(GameObjectType.Monster, monster);
@@ -112,7 +113,7 @@ class Zone {
                 if (spawn.zoneId != this.id)
                     continue;
 
-                let n = new NPC({
+                const n = new NPC({
                     id: baseNPC.id,
                     zone: this,
                     flags: baseNPC.flags,
@@ -141,7 +142,7 @@ class Zone {
                         condition: baseNPC.statistics.condition,
                     },
                     //@ts-ignore
-                    position: spawn.position
+                    position: spawn.position,
                 });
 
                 this.add(GameObjectType.NPC, n);
@@ -149,21 +150,21 @@ class Zone {
         }
 
         // read height map
-        let heightData = fs.readFileSync(path.dirname(__filename) + `/../data/maps/${this.id}.sht`);
+        const heightData = fs.readFileSync(path.dirname(__filename) + `/../data/maps/${this.id}.sht`);
         const reader1 = SmartBuffer.fromBuffer(heightData);
 
         for (let h = 0; h < this.height; h++)
             for (let w = 0; w < this.width; w++)
-                this.heightMap[w][h] = reader1.readUInt16BE() / 100.0;
+                this.heightMap[w]![h]! = reader1.readUInt16BE() / 100.0;
 
         // read attribute map
-        let attrData = fs.readFileSync(path.dirname(__filename) + `/../data/maps/${this.id}.sat`);
+        const attrData = fs.readFileSync(path.dirname(__filename) + `/../data/maps/${this.id}.sat`);
         const reader2 = SmartBuffer.fromBuffer(attrData);
 
         for (let h = 0; h < this.height; h++) {
             for (let w = 0; w < this.width; w++) {
-                let val = reader2.readUInt8();
-                this.attributeMap[w][h] = (val === 0 || val in AttributeFlags) ? val : AttributeFlags.BLOCK;
+                const val = reader2.readUInt8();
+                this.attributeMap[w]![h]! = (val === 0 || val in AttributeFlags) ? val : AttributeFlags.BLOCK;
             }
         }
     }
@@ -172,7 +173,8 @@ class Zone {
         x -= Math.floor(range / 2);
         y -= Math.floor(range / 2);
 
-        return this.quadTree.query(new Box(x, y, range, range)) as GamePoint[];
+        const box = new Box(x, y, range, range);
+        return this.quadTree.query(box) as GamePoint[];
     }
 
     private getGameObjectsByType(type: GameObjectType) {
@@ -236,13 +238,13 @@ class Zone {
     }
 
     getAttribute(position: Position, asText: boolean = false) {
-        let x = Math.round(position.x);
-        let y = Math.round(position.y);
+        const x = Math.round(position.x);
+        const y = Math.round(position.y);
 
         if (x < 0 || x >= this.width || y < 0 || y >= this.height)
             return asText ? AttributeFlags[AttributeFlags.BLOCK] : AttributeFlags.BLOCK;
 
-        let attribute = this.attributeMap[x][y];
+        const attribute = this.attributeMap[x]![y]!;
 
         if (!asText)
             return attribute;
@@ -251,14 +253,12 @@ class Zone {
     }
 
     getHeight(position: Position) {
-        let x = Math.round(position.x);
-        let y = Math.round(position.y);
+        const x = Math.round(position.x);
+        const y = Math.round(position.y);
 
         if (x < 0 || x >= this.width || y < 0 || y >= this.height)
             return 0;
 
-        return this.heightMap[x][y];
+        return this.heightMap[x]![y]!;
     }
 }
-
-export default Zone;

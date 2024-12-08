@@ -4,15 +4,17 @@ import log from './logger';
 import dotenv from 'dotenv';
 dotenv.config();
 
-class db {
+const env = process.env;
+
+export default class db {
     static #config: string | mariadb.PoolConfig = {
-        host: process.env.DATABASE_HOST,
-        port: parseInt(process.env.DATABASE_PORT || '3306'),
-        user: process.env.DATABASE_USERNAME,
-        password: process.env.DATABASE_PASSWORD,
-        database: process.env.DATABASE_NAME,
+        host: env.DATABASE_HOST,
+        port: parseInt(env.DATABASE_PORT || '3306'),
+        user: env.DATABASE_USERNAME,
+        password: env.DATABASE_PASSWORD,
+        database: env.DATABASE_NAME,
         connectionLimit: 50,
-        multipleStatements: true
+        //multipleStatements: true, // don't
     }
 
     static pool: mariadb.Pool;
@@ -23,5 +25,3 @@ class db {
         return this.pool;
     }
 }
-
-export default db;

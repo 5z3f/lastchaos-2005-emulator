@@ -1,7 +1,7 @@
 import Message from '@local/shared/message';
-import _messages from './_messages.json';
 import Session from '@local/shared/session';
 import { SendersType } from '.';
+import _messages from './_messages.json';
 
 interface SkillData {
     subType: EffectMessageType.Skill;
@@ -41,12 +41,12 @@ export enum EffectMessageType {
     ETC,
     Produce,
     Item,
-    //Fire
+    //Fire,
 }
 
 export default function (session: Session<SendersType>) {
     return (data: EffectMessageData) => {
-        let msg = new Message({ type: _messages.MSG_EFFECT, subType: data.subType });
+        const msg = new Message({ type: _messages.MSG_EFFECT, subType: data.subType });
 
         switch (data.subType) {
             case EffectMessageType.Skill:

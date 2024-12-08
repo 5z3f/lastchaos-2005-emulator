@@ -1,12 +1,12 @@
 
 import accounts from './accounts';
 import characters from './characters';
-import items from './items';
-import quickslot from './quickslot';
+import chatlog from './chatlog';
+import friends from './friends';
 import inventory from './inventory';
 import invites from './invites';
-import friends from './friends';
-import chatlog from './chatlog';
+import items from './items';
+import quickslot from './quickslot';
 
 const database = {
     accounts,

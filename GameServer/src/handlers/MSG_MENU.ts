@@ -1,25 +1,25 @@
-import Character from '../gameobject/character';
-import { Statistic } from '../system/core/statistic';
-import Position from '../types/position';
-import game from '../game';
-import database from '../database';
 import Message from '@local/shared/message';
 import Session from '@local/shared/session';
+import database from '../database';
+import game from '../game';
+import Character from '../gameobject/character';
 import { SendersType } from '../senders';
 import { DBMessageType } from '../senders/db';
 import { FailMessageType } from '../senders/fail';
+import { Statistic } from '../system/core/statistic';
+import Position from '../types/position';
 import { ZoneType } from '../world';
 
 export default function (session: Session<SendersType>, msg: Message) {
-    let subType = msg.read('u8');
-    let subTypeMap = {
+    const subType = msg.read('u8');
+    const subTypeMap = {
         0: 'MSG_MENU_NEW',
         2: 'MSG_MENU_START',
     };
 
     const subTypeHandler = {
         MSG_MENU_NEW: async () => {
-            let data = {
+            const data = {
                 nickname: msg.read('stringnt'),
                 classId: msg.read('u8'),
                 hairId: msg.read('u8'),
@@ -35,15 +35,16 @@ export default function (session: Session<SendersType>, msg: Message) {
             if (data.faceId >= MAX_FACESTYLES || data.hairId >= MAX_HAIRSTYLES || data.jobId >= MAX_CLASSES)
                 return;
 
-            const [exists] = await database.characters.exists(data.nickname);
+            const [exists] = (await database.characters.exists(data.nickname))!;
 
             if (exists) {
                 session.send.fail(FailMessageType.NicknameAlreadyTaken);
                 return;
             }
 
+            const accountId = session.accountId!;
             const result = await database.characters.create({
-                accountId: session.accountId,
+                accountId: accountId,
                 nickname: data.nickname,
                 classId: data.classId,
                 faceId: data.faceId,
@@ -60,7 +61,7 @@ export default function (session: Session<SendersType>, msg: Message) {
             // TODO: add standard items here (?)
 
             // TODO: this code is duplicated, we need to import it from somewhere (origin: MSG_LOGIN)
-            const dbCharacters = await database.accounts.getCharacters(session.accountId);
+            const dbCharacters = await database.accounts.getCharacters(accountId);
             if (!dbCharacters) {
                 session.send.fail(14); // MSG_FAIL_DB_UNKNOWN
                 return;
@@ -86,7 +87,7 @@ export default function (session: Session<SendersType>, msg: Message) {
             });
         },
         MSG_MENU_START: async () => {
-            let characterId = msg.read('i32>'); // selected character id
+            const characterId = msg.read('i32>'); // selected character id
 
             const dbCharacter = await database.characters.getById(characterId);
 
@@ -98,7 +99,7 @@ export default function (session: Session<SendersType>, msg: Message) {
 
             const startingZone = game.world.getZone(ZoneType.Juno);
 
-            let character = new Character({
+            const character = new Character({
                 session: session,
                 uid: session.uid,
                 id: dbCharacter.id,
@@ -115,7 +116,7 @@ export default function (session: Session<SendersType>, msg: Message) {
                     level: dbCharacter.level,
                     experience: dbCharacter.experience,
                     maxExperience: 100,                                     // FIXME: probably will be removed later (?)
-                    skillpoint: dbCharacter.skillpoint
+                    skillpoint: dbCharacter.skillpoints,
                 },
                 //@ts-ignore
                 statistics: {

@@ -1,4 +1,3 @@
-import game from "../game";
 import Character from "../gameobject/character";
 import Chat, { ChatType, Color } from "../system/core/chat";
 
@@ -9,7 +8,7 @@ type MessageParams = {
     text: string;
 }
 
-class chat {
+export default class ChatApi {
     /**
      * Sends a message to the player.
      * @param senderCharacter Character who sends the message.
@@ -36,5 +35,3 @@ class chat {
         Chat.system(character, text, color);
     }
 }
-
-export default chat;

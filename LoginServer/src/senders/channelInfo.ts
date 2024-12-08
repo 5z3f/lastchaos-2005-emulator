@@ -1,12 +1,12 @@
 import Message from '@local/shared/message';
-import app from '../app';
-import _messages from './_messages.json';
 import Session from '@local/shared/session';
 import { SendersType } from '.';
+import app from '../app';
+import _messages from './_messages.json';
 
 export default function (session: Session<SendersType>) {
     return (data: any) => {
-        let msg = new Message({ type: _messages.MSG_LOGINSERV_PLAYER });
+        const msg = new Message({ type: _messages.MSG_LOGINSERV_PLAYER });
 
         msg.write('i32>', 1);                           // recentServer
         msg.write('i32>', 1);                           // recentSubNum

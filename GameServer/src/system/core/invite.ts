@@ -1,19 +1,18 @@
 import log from "@local/shared/logger";
-import game from "../../game";
-import Character from "../../gameobject/character";
-import database from "../../database";
-import { Color } from "./chat";
 import api from "../../api";
-import { FriendMessageType } from "../../handlers/MSG_FRIEND";
+import database from "../../database";
+import game from "../../game";
 import { GameObjectType } from "../../gameobject";
+import Character from "../../gameobject/character";
+import { Color } from "./chat";
 
 export enum InviteType {
     Friend,
     Guild,
-    Party
+    Party,
 }
 
-class Invite {
+export default class Invite {
     id: number;
     type: InviteType;
     requesterId: number;
@@ -34,7 +33,7 @@ class Invite {
 
         return new Invite(dbInviteId, inviteType, requesterCharacter.id, receiverCharacter.id);
     }
-    
+
     public async remove() {
         const result = await database.invites.delete(this.id);
 
@@ -48,8 +47,8 @@ class Invite {
 
     public async resolve(accepted: boolean) {
         // find requester and receiver
-        const requesterCharacter = game.world.find(GameObjectType.Character, (ch: Character) => ch.id == this.requesterId);
-        const receiverCharacter = game.world.find(GameObjectType.Character, (ch: Character) => ch.id == this.receiverId);
+        const requesterCharacter = game.world.find(GameObjectType.Character, (ch: Character) => ch.id === this.requesterId);
+        const receiverCharacter = game.world.find(GameObjectType.Character, (ch: Character) => ch.id === this.receiverId);
 
         if (!receiverCharacter) {
             log.error(`Failed to resolve invite ${this.id}.`);
@@ -64,8 +63,8 @@ class Invite {
             return false;
         }
 
-        if(!accepted) {
-            if(!requesterCharacter)
+        if (!accepted) {
+            if (!requesterCharacter)
                 return false;
 
             /*
@@ -76,7 +75,7 @@ class Invite {
                     subType: FriendMessageType.FriendshipCancel,
                 });
             */
-            
+
             api.chat.system(requesterCharacter, `${receiverCharacter.nickname} declined your request.`, Color.IndianRed);
             return true;
         }
@@ -99,5 +98,3 @@ class Invite {
         return true;
     }
 }
-
-export default Invite;

@@ -1,4 +1,6 @@
 import Message from '@local/shared/message';
+import type Session from '@local/shared/session';
+import type { SendersType } from '.';
 import _messages from './_messages.json';
 
 // TODO: refactor this
@@ -9,9 +11,21 @@ export enum MessageDamageType {
     Magic,
 }
 
-export default function (session) {
-    return ({ attackerObjType, attackerIndex, damageType, skillId, targetObjType, targetIndex, targetHp, targetMp, damage }) => {
-        let msg = new Message({ type: _messages.MSG_DAMAGE });
+export type DamageMessage = {
+    attackerObjType: number;
+    attackerIndex: number;
+    damageType: MessageDamageType;
+    skillId: number;
+    targetObjType: number;
+    targetIndex: number;
+    targetHp: number;
+    targetMp: number;
+    damage: number;
+};
+
+export default function (session: Session<SendersType>) {
+    return ({ attackerObjType, attackerIndex, damageType, skillId, targetObjType, targetIndex, targetHp, targetMp, damage }: DamageMessage) => {
+        const msg = new Message({ type: _messages.MSG_DAMAGE });
 
         msg.write('u8', attackerObjType);
         msg.write('i32>', attackerIndex);

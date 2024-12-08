@@ -1,10 +1,10 @@
+import { Statpoints } from '../system/core/statpoints';
 import { Position } from '../types';
-import GameObject, { GameObjectEvents, GameObjectType, MonsterEvents, PacketObjectType } from './index';
-import Attackable from './traits/attackable';
 import Zone from '../zone';
 import Character from './character';
 import type { Statistics } from './index';
-import { Statpoints } from '../system/core/statpoints';
+import GameObject, { GameObjectEvents, GameObjectType, PacketObjectType } from './index';
+import Attackable from './traits/attackable';
 
 type Reward = {
     experience: number,
@@ -26,12 +26,12 @@ type MonsterOptions = {
         strength: number,
         dexterity: number,
         intelligence: number,
-        condition: number
-    }
+        condition: number,
+    },
 };
 
 
-class Monster extends GameObject<GameObjectType.Monster> {
+export default class Monster extends GameObject<GameObjectType.Monster> {
     level: number;
     reward: Reward;
     respawnTime: number;
@@ -100,7 +100,7 @@ class Monster extends GameObject<GameObjectType.Monster> {
     }
 
     appearInRange(range: number) {
-        let characterPoints = this.zone.getObjectsInArea(this.position.x, this.position.y, range)
+        const characterPoints = this.zone.getObjectsInArea(this.position.x, this.position.y, range)
             .filter(obj => obj.type === 'character');
 
         for (let obj of characterPoints)
@@ -129,5 +129,3 @@ class Monster extends GameObject<GameObjectType.Monster> {
         this.emit(GameObjectEvents.Die);
     }
 }
-
-export default Monster;

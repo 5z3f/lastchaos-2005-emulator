@@ -1,12 +1,11 @@
 import log from '@local/shared/logger';
 import Message from '@local/shared/message';
-import session from '@local/shared/session';
-import database from '../database';
 import Session from '@local/shared/session';
+import database from '../database';
 import { SendersType } from '../senders';
 
 export default async function (session: Session<SendersType>, msg: Message) {
-    let data = {
+    const data = {
         version: msg.read('u32>'),
         mode: msg.read('u8'),
         username: msg.read('stringnt'),
@@ -16,14 +15,15 @@ export default async function (session: Session<SendersType>, msg: Message) {
 
     // TODO: check client version and if its wrong send fail message: MSG_FAIL_WRONG_VERSION
 
-    let dbAccount = await database.accounts.getByCredentials(data.username, data.password);
+    const dbAccount = await database.accounts.getByCredentials(data.username, data.password);
 
     if (dbAccount === false) {
         session.send.fail(3); // MSG_FAIL_WRONG_PASSWORD
         log.data(`[IN]  >> client failed login request: [ver: ${data.version}, username: ${data.username}, password: ${data.password}, nation: ${data.nation}`);
         return;
     }
-    else if (dbAccount == null) {
+
+    if (dbAccount === null) {
         session.send.fail(37); // MSG_FAIL_LOGINSERV_NO_SERVICE
         return;
     }
@@ -32,7 +32,7 @@ export default async function (session: Session<SendersType>, msg: Message) {
     session.pinAccount(dbAccount.id);
 
     log.data(`[IN]  >> client login request: [ver: ${data.version}, username: ${data.username}, password: ${data.password}, nation: ${data.nation}`);
-    
+
     // @ts-ignore
     session.send.channelInfo();
 }

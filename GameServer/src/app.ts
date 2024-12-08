@@ -1,7 +1,7 @@
 import db from '@local/shared/db';
+import { Pool } from 'mariadb';
 import config from '../../servers.config.json';
 import game from './game';
-import { Pool } from 'mariadb';
 
 export default class App {
     static config = config; // FIXME: type this properly

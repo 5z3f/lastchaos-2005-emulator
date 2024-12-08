@@ -9,7 +9,7 @@ app.initialize();
 // register app as global for REPL
 global.app = app;
 
-let srv = new Server<SendersType>({
+const srv = new Server<SendersType>({
     host: app.config.gameserver.host,
     port: app.config.gameserver.port,
     handlers,

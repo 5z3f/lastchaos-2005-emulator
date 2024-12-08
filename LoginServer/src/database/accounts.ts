@@ -1,15 +1,14 @@
-import bcrypt from 'bcrypt';
-import crypto from 'crypto';
 import log from '@local/shared/logger';
+import bcrypt from 'bcrypt';
 import app from '../app';
 
-type account = {
+type DBAccount = {
     id: number;
     username: string;
     hash: string;
 };
 
-type character = {
+type DBCharacter = {
     id: number;
     accountId: number;
     nickname: string;
@@ -18,18 +17,17 @@ type character = {
     hairId: number;
 };
 
-class accounts {
-    static #salt = 'salty';
-
+export default class Accounts {
     static async getByCredentials(username: string, password: string) {
         try {
-            const [dbAccount]: account[] = await app.dbc.query("SELECT * FROM accounts WHERE username = ?", [username]);
+            const [dbAccount]: DBAccount[] = await app.dbc.query("SELECT * FROM accounts WHERE username = ?", [username]);
 
-            if (!(await bcrypt.compare(password, dbAccount.hash)))
+            if (!dbAccount)
                 return false;
-            //let hashed = crypto.createHash('sha256').update(password + this.#salt).digest('hex');
-            //if (hashed != dbAccount.hash)
-            //    return false;
+
+            const isValid = await bcrypt.compare(password, dbAccount.hash);
+            if (!isValid)
+                return false;
 
             return dbAccount;
         }
@@ -41,7 +39,7 @@ class accounts {
 
     static async getCharacters(accountId: number) {
         try {
-            const dbCharacters: character[] = await app.dbc.query("SELECT * FROM characters WHERE accountId = ?", [accountId]);
+            const dbCharacters: DBCharacter[] = await app.dbc.query("SELECT * FROM characters WHERE accountId = ?", [accountId]);
             return dbCharacters;
         }
         catch (error) {
@@ -50,5 +48,3 @@ class accounts {
         }
     }
 }
-
-export default accounts;

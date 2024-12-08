@@ -6,14 +6,14 @@ export enum ZoneType {
     Juno = 0,
 }
 
-class World {
+export default class World {
     zones: Zone[] = [];
 
     constructor() {
         // add juno
         this.zones.push(new Zone(0, 1536, 1536));
     }
-    
+
     getZone(zoneType: ZoneType) {
         return this.zones.find(zone => zone.id === zoneType);
     }
@@ -28,11 +28,11 @@ class World {
             return false;
 
         // add to zone
-        let zone = this.getZone(zoneType);
-        
+        const zone = this.getZone(zoneType);
+
         if (!zone)
             return false;
-        
+
         zone.add(type, data);
         return true;
     }
@@ -46,7 +46,7 @@ class World {
 
         for (let zone of this.zones) {
             result = zone.find(type, opts);
-            
+
             if (result)
                 break;
         }
@@ -56,10 +56,8 @@ class World {
 
     remove(type: GameObjectType, zoneType: ZoneType, opts: Function) {
         for (let zone of this.zones) {
-            if (zone.id == zoneType)
+            if (zone.id === zoneType)
                 zone.remove(type, opts);
         }
     }
 }
-
-export default World;

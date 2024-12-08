@@ -9,18 +9,17 @@ import { EffectMessageType } from "../senders/effect";
 // UPDATE: ok it probably has something to do with the MSG_MOVE_STOP packet, need to figure it out
 
 export default async function (session: Session<SendersType>, msg: Message) {
-    var subTypeMap = {
+    const subTypeMap = {
         2: 'MSG_SKILL_READY',
         3: 'MSG_SKILL_FIRE',
         // TODO: 
     };
 
     console.log('SKILL RECEIVED!!!!!!!!!!!!1')
-    var subType = msg.read('u8');
+    const subType = msg.read('u8');
     console.log('skill subtype', subType);
 
-    const subTypeHandler =
-    {
+    const subTypeHandler = {
         MSG_SKILL_READY: () => {
             const data = {                      // triple bash                      // concentration
                 objType: msg.read('u8'),        // 0x0                              0x0, 0x0, 0x0, 0x0
@@ -53,7 +52,7 @@ export default async function (session: Session<SendersType>, msg: Message) {
                 targetUid: msg.read('i32>'),    // 0x0, 0x0, 0x6, 0x9b
                 targetCount: msg.read('u8'),    // 0x0
                 targets: [],
-                
+
                 skillSpeed: -1, // tmp
                 cMoveChar: 0, // tmp
                 x: 0, // tmp
@@ -63,10 +62,10 @@ export default async function (session: Session<SendersType>, msg: Message) {
                 layer: 0 // tmp
             }
 
-            for(let i = 0; i < data.targetCount; i++) {
+            for (let i = 0; i < data.targetCount; i++) {
                 // @ts-ignore
                 data.targets.push({
-                    targetObjType: msg.read('u8'), 
+                    targetObjType: msg.read('u8'),
                     targetUid: msg.read('i32>'),
                 })
             }
@@ -88,11 +87,11 @@ export default async function (session: Session<SendersType>, msg: Message) {
                 skillId: data.skillId,
                 objType: data.targetObjType,
                 charUid: data.targetUid
-            
+
             })
         },
     }
 
-    if(subTypeMap[subType] in subTypeHandler)
+    if (subTypeMap[subType] in subTypeHandler)
         subTypeHandler[subTypeMap[subType]]();
 }

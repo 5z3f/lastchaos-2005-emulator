@@ -2,8 +2,9 @@
 import Session from '@local/shared/session';
 
 import appear from './appear';
-import attack from './attack';
+import assist from './assist';
 import at from './at';
+import attack from './attack';
 import autoattack from './autoattack';
 import chat from './chat';
 import custom from './custom';
@@ -22,12 +23,11 @@ import move from './move';
 import objectstatus from './objectstatus';
 import pulse from './pulse';
 import quest from './quest';
+import quickslot from './quickslot';
+import skill from './skill';
 import statpoint from './statpoint';
 import status from './status';
 import sys from './sys';
-import quickslot from './quickslot';
-import skill from './skill';
-import assist from './assist';
 
 export type SendersType = {
     appear: ReturnType<typeof appear>,
@@ -56,7 +56,7 @@ export type SendersType = {
     sys: ReturnType<typeof sys>,
     skill: ReturnType<typeof skill>,
     quickslot: ReturnType<typeof quickslot>,
-    assist: ReturnType<typeof assist>
+    assist: ReturnType<typeof assist>,
 };
 
 export function sendersFunction(session: Session<SendersType>) {
@@ -87,7 +87,7 @@ export function sendersFunction(session: Session<SendersType>) {
         sys: sys(session),
         skill: skill(session),
         quickslot: quickslot(session),
-        assist: assist(session)
+        assist: assist(session),
     };
 }
 

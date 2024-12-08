@@ -1,6 +1,4 @@
 
-class character {
+export default class CharacterApi {
     // static update()
 }
-
-export default character;

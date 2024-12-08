@@ -1,12 +1,12 @@
 import Message from '@local/shared/message';
-import _messages from './_messages.json';
 import Session from '@local/shared/session';
 import { SendersType } from '.';
+import _messages from './_messages.json';
 
 export enum EnvMessageType {
     TaxChange,
     Weather,
-    Time
+    Time,
 }
 
 interface TaxChangeData {
@@ -34,7 +34,7 @@ type EnvMessageData = TaxChangeData | WeatherData | TimeData;
 
 export default function (session: Session<SendersType>) {
     return (data: EnvMessageData) => {
-        let msg = new Message({ type: _messages.MSG_ENV, subType: data.subType });
+        const msg = new Message({ type: _messages.MSG_ENV, subType: data.subType });
 
         switch (data.subType) {
             case EnvMessageType.TaxChange:

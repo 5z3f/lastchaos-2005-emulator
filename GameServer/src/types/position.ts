@@ -1,14 +1,22 @@
 import { Vector2 } from 'three';
 
+export type PositionProps = {
+    x: number,
+    y: number,
+    z: number,
+    r: number,
+    layer: number,
+};
+
 type PositionOptions = {
     x: number,
     y: number,
     z?: number,
     r?: number,
-    layer?: number
+    layer?: number,
 };
 
-class Position extends Vector2 {
+export default class Position extends Vector2 {
 
     static from({ x, y, z = 0, r = 0, layer = 0 }: PositionOptions) {
         return new Position(x, y, z, r, layer);
@@ -41,7 +49,7 @@ class Position extends Vector2 {
     }
 
     static setRandomWithinRange(originalPosition: Position, range: number) {
-        let randomOffset = new Vector2().random().subScalar(0.5).multiplyScalar(range);
+        const randomOffset = new Vector2().random().subScalar(0.5).multiplyScalar(range);
         return Position.from(originalPosition).add(randomOffset);
     }
 
@@ -50,12 +58,12 @@ class Position extends Vector2 {
     }
 
     setRandomWithinRange(range: number) {
-        let constructor = this.constructor as typeof Position;
+        const constructor = this.constructor as typeof Position;
         return constructor.setRandomWithinRange(this, range);
     }
 
     getRandomWithinRange(range: number) {
-        let constructor = this.constructor as typeof Position;
+        const constructor = this.constructor as typeof Position;
         return constructor.getRandomWithinRange(this, range);
     }
 
@@ -63,5 +71,3 @@ class Position extends Vector2 {
         return `${this.x}, ${this.y}, ${this.z}, ${this.r}, ${this.layer}`;
     }
 }
-
-export default Position;

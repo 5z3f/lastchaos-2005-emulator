@@ -17,7 +17,11 @@ function buildSlotMessage(session: Session<SendersType>, msg: Message, pageId: n
     let value1: number;
     let value2: number;
 
-    [slotType, value1, value2] = session.character.quickslot.quickSlots[pageId][slot];
+    const character = session.character!;
+    const quickslot = character.quickslot.quickSlots[pageId]![slot]!;
+    // @ts-ignore TODO: fix types
+    [slotType, value1, value2] = quickslot;
+
     msg.write('u8', (slotType === QuickSlotType.Empty) ? 255 : slotType);
 
     switch (slotType) {
@@ -35,7 +39,7 @@ function buildSlotMessage(session: Session<SendersType>, msg: Message, pageId: n
 export default function (session: Session<SendersType>) {
     // TODO: types for data
     return (subType: QuickSlotMessageType, data: any) => {
-        var msg = new Message({ type: _messages.MSG_QUICKSLOT, subType });
+        const msg = new Message({ type: _messages.MSG_QUICKSLOT, subType });
         msg.write('u8', data.pageId);
 
         switch (subType) {

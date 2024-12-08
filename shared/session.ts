@@ -1,10 +1,9 @@
-import util from '../GameServer/src/util'; // TODO: this
-import Message from '@local/shared/message';
 import log from "@local/shared/logger";
-//import game from '../GameServer/src/game'; // TODO: move this
-import Server from './server';
+import Message from '@local/shared/message';
 import net from 'net';
 import Character from '../GameServer/src/gameobject/character';
+import { createSessionId } from "../GameServer/src/util";
+import Server from './server';
 
 const game = {
     packDefault: true,
@@ -20,7 +19,7 @@ type sessionOptions<T> = {
 /**
  * Represents a session between a client and the server.
  */
-class Session<T> {
+export default class Session<T> {
     server: Server<T>;
     socket: net.Socket;
 
@@ -28,10 +27,10 @@ class Session<T> {
     uid: number;
 
     // pinned character
-    character: Character;
+    character?: Character;
 
     // database user account id
-    accountId: number;
+    accountId?: number;
 
     handlers: any;
     send: T;
@@ -40,7 +39,7 @@ class Session<T> {
         this.server = server;
         this.socket = socket;
 
-        this.uid = util.createSessionId();
+        this.uid = createSessionId();
 
         // TODO: type this
         this.handlers = handlers;
@@ -49,17 +48,17 @@ class Session<T> {
         log.info(`New session: ${this.toString()}`);
 
         const listen = () => {
-            let that = this;
+            const that = this;
 
             this.socket.on('data', (data) => {
-                let msg = new Message({ buffer: data });
+                const msg = new Message({ buffer: data });
                 let id = msg.read('u8');
 
                 if (game.packDefault)
                     id = id & 0x3f;
 
                 // TODO: restrict access to all packets except '0x03' if client is not logged in
-                let handler = that.handlers[id];
+                const handler = that.handlers[id];
 
                 if (!handler) {
                     log.info(`Received unknown message: ${id}`);
@@ -94,7 +93,10 @@ class Session<T> {
      * Writes data to the socket.
      * @param buffer - The data to be written, either as a string or Uint8Array.
      */
-    write(buffer: string | Uint8Array) {
+    write(buffer: string | Uint8Array | Buffer) {
+        if (buffer instanceof Buffer)
+            buffer = new Uint8Array(buffer);
+
         this.socket.write(buffer);
     }
 
@@ -142,7 +144,7 @@ class Session<T> {
      * Unpins the character from the session.
      */
     unpinCharacter() {
-        if(!this.character)
+        if (!this.character)
             return;
 
         this.character.dispose();
@@ -157,5 +159,3 @@ class Session<T> {
         return this.character !== undefined;
     }
 }
-
-export default Session;

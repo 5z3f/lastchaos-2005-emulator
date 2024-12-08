@@ -28,30 +28,40 @@ const healthPotion = {
     name: 'Health Potion',
     description: 'Recovers X HP over X seconds',
     duration: -1, // we assign this later
-    apply: function(character: Character, level: number, buff: Buff) {
+    apply: function (character: Character, level: number, buff: Buff) {
         const baseItem = (buff.originRef as BaseItem);
 
-        if(!baseItem)
+        if (!baseItem)
             return [];
 
         const spellId = baseItem.values[0];
-    
-        const applicationTime = spells[spellId][level - 1][2] * 1000;
-        const totalHealthToAdd = spells[spellId][level - 1][1];    
-        this.duration = spells[spellId][level - 1][2];
-    
+        if (!spellId)
+            return [];
+
+        const spellsByLevel = spells[spellId as keyof typeof spells];
+        if (!spellsByLevel)
+            return [];
+
+        const spell = spellsByLevel[level - 1];
+        if (!spell)
+            return [];
+
+        const applicationTime = spell[2] * 1000;
+        const totalHealthToAdd = spell[1];
+        this.duration = spell[2];
+
         const tick = 100; // ms
         const ticks = applicationTime / tick;
         const healthPerTick = totalHealthToAdd / ticks;
-    
+
         for (let i = 0; i < ticks; i++) {
             character.wait(() => {
                 character.heal(healthPerTick);
-                if(character.statistics.health <= character.statistics.maxHealth.getTotalValue())
+                if (character.statistics.health <= character.statistics.maxHealth.getTotalValue())
                     character.updateStatistics();
             }, i * tick);
         }
-    
+
         api.chat.system(character, 'You have used a Health Potion.');
 
         return [];

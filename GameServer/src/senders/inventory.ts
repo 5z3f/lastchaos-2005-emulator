@@ -1,14 +1,15 @@
 import App from '../app';
 
 import Message from '@local/shared/message';
-import _messages from './_messages.json';
-import { ItemWearingPosition } from '../api/item';
 import Session from '@local/shared/session';
 import { SendersType } from '.';
+import { ItemWearingPosition } from '../api/item';
+import type { Inventory, InventoryItem } from '../system/core/inventory';
+import _messages from './_messages.json';
 
 const clientHigherThan1107 = App.config.gameserver.clientVersion > 1107;
 
-function buildItemMessage(msg: Message, item) {
+function buildItemMessage(msg: Message, item: InventoryItem) {
     if (!item.baseItem.id) {
         msg.write('i32>', -1);                                       // item index
         return;
@@ -21,34 +22,36 @@ function buildItemMessage(msg: Message, item) {
     msg.write('i32>', item.flag);                                   // flag
     msg.write('i32>', item.durability);                             // durability
 
-    if(clientHigherThan1107)
+    if (clientHigherThan1107)
         msg.write('i32>', 0);                                       // used2
 
     msg.write('i64>', item.stack);                                  // count
     msg.write('u8', item.options.length);                           // option count
 
     for (let i = 0; i < item.options.length; i++) {
-        msg.write('u8', item.options[i].type);                      // option type
-        msg.write('u8', item.options[i].level);                     // option level
+        //@ts-ignore TODO: seal types
+        msg.write('u8', item.options[i]!.type);                      // option type
+        //@ts-ignore TODO: seal types
+        msg.write('u8', item.options[i]!.level);                     // option level
     }
 }
 
 export default function (session: Session<SendersType>) {
-    return (inventory) => {
-        let rows = inventory.rows;
+    return (inventory: Inventory) => {
+        const rows = inventory.rows;
 
         // tabs
         for (let i = 0; i < rows.length; i++) {
             // columns
-            for (let j = 0; j < rows[i].length; j++) {
-                let msg = new Message({ type: _messages.MSG_INVENTORY });
+            for (let j = 0; j < rows[i]!.length; j++) {
+                const msg = new Message({ type: _messages.MSG_INVENTORY });
 
                 msg.write('u8', 0);       // resultArrange
                 msg.write('u8', i);       // tabId
                 msg.write('u8', j);       // colId
 
-                for (let k = 0; k < rows[i][j].length; k++) {
-                    let item = rows[i][j][k].item;
+                for (let k = 0; k < rows[i]![j]!.length; k++) {
+                    const item = rows[i]![j]![k]!.item;
 
                     if (!item) {
                         msg.write('i32>', -1);                                       // item index

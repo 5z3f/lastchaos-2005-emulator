@@ -8,7 +8,7 @@
 - Import the `lastchaos.sql` file into your **MariaDB** instance. This will set up the necessary database structure for the server.
 
 #### __Configure the Environment__
-- Update the `.env` file with your database connection details. 
+- Copy `.env` to `.env.local` and update it to your database connection details. 
 
 #### __Install Dependencies__
 - Run `npm install` in your terminal. This will install all the necessary dependencies for the project.

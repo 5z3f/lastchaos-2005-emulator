@@ -1,11 +1,21 @@
 import Message from '@local/shared/message';
-import _messages from './_messages.json';
 import Session from '@local/shared/session';
 import { SendersType } from '.';
+import type { PositionProps } from '../types/position';
+import _messages from './_messages.json';
+
+export type MoveMessage = {
+    objType: number;
+    moveType: number;
+    uid: number;
+    speed: number;
+    position: PositionProps;
+    attribute: number;
+}
 
 export default function (session: Session<SendersType>) {
-    return ({ objType, moveType, uid, speed, position, attribute }) => {
-        let msg = new Message({ type: _messages.MSG_MOVE, subType: objType })
+    return ({ objType, moveType, uid, speed, position, attribute }: MoveMessage) => {
+        const msg = new Message({ type: _messages.MSG_MOVE, subType: objType })
 
         msg.write('u8', moveType);
         msg.write('i32>', uid);

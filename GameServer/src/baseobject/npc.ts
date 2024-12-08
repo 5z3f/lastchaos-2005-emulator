@@ -1,5 +1,5 @@
+import type { PositionProps } from '../types/position';
 import BaseObject from './index';
-import { Statistic, Modifier, ModifierType } from '../system/core/statistic';
 
 type NPCOptions = {
     id: number,
@@ -23,17 +23,11 @@ type NPCOptions = {
 
 type Spawn = {
     zoneId: number,
-    position: {
-        x: number,
-        y: number,
-        z: number,
-        r: number,
-        layer: number
-    },
-    respawnTime: number
+    position: PositionProps,
+    respawnTime: number,
 };
 
-class BaseNPC extends BaseObject {
+export default class BaseNPC extends BaseObject {
 
     vision: number;
     attackType: number;
@@ -107,5 +101,3 @@ class BaseNPC extends BaseObject {
         Object.assign(this.reward, reward, this.reward);
     }
 }
-
-export default BaseNPC;

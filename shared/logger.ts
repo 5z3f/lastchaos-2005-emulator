@@ -1,5 +1,6 @@
-import fs from 'fs';
+// @ts-ignore ts couldn't resolve this import -- check this later
 import chalk from 'chalk';
+import fs from 'fs';
 
 function writeToLogFile(message: string) {
     const now = new Date();

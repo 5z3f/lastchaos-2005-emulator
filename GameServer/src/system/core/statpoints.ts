@@ -7,7 +7,7 @@ export enum StatpointType {
     Strength,
     Dexterity,
     Intelligence,
-    Condition
+    Condition,
 }
 
 type StatpointOptions = {
@@ -30,7 +30,7 @@ export class Statpoints {
 
     constructor({ owner, availablePoints, strength, dexterity, intelligence, condition }: StatpointOptions) {
         this.owner = owner;
-        this.availablePoints = availablePoints;
+        this.availablePoints = availablePoints ?? 0;
 
         this.strength = new Statistic(strength);
         this.dexterity = new Statistic(dexterity);

@@ -1,29 +1,29 @@
 import log from '@local/shared/logger';
 
-import { Statistic, Modifier, ModifierType, ModifierOrigin, StatisticEvents, ModifierEffectType } from '../system/core/statistic';
-import { Inventory, InventoryItem, InventoryRow } from '../system/core/inventory';
-import { Statpoints, StatpointType } from '../system/core/statpoints';
-import { Buffs, Buff, BuffEvents, BuffOrigin } from '../system/core/buff';
+import { Buff, BuffOrigin, Buffs } from '../system/core/buff';
 import Chat from '../system/core/chat';
+import { Inventory, InventoryItem } from '../system/core/inventory';
 import Messenger from '../system/core/messenger';
 import Quickslot from '../system/core/quickslot';
+import { Modifier, ModifierType, Statistic, StatisticEvents } from '../system/core/statistic';
+import { Statpoints } from '../system/core/statpoints';
 
+import Session from '@local/shared/session';
 import GameObject, { PacketObjectType } from './index';
 import Attackable from './traits/attackable';
-import Session from '@local/shared/session';
 
-import { GameObjectEvents, CharacterEvents, GameObjectType } from './index';
-import type { Statistics } from './index';
 import { ItemWearingPosition } from '../api/item';
+import type { Statistics } from './index';
+import { CharacterEvents, GameObjectEvents, GameObjectType } from './index';
 
-import senders, { SendersType } from '../senders';
 import { FriendStatusType } from '../handlers/MSG_FRIEND';
+import { SendersType } from '../senders';
 
 export enum CharacterRole {
     None,
     GameSage,
     GameMaster,
-    Administrator
+    Administrator,
 };
 
 export enum ClassType {
@@ -32,7 +32,7 @@ export enum ClassType {
     Healer,
     Mage,
     Rogue,
-    Sorcerer
+    Sorcerer,
 };
 
 type Reward = {
@@ -51,13 +51,13 @@ type CharacterOptions = {
     nickname: string,
     appearance: {
         hairType: number,
-        faceType: number
+        faceType: number,
     },
     progress: {
         level: number,
         experience: number,
         maxExperience: number,
-        skillpoint: number
+        skillpoint: number,
     },
     reward: Reward,
     reputation: number,
@@ -67,13 +67,13 @@ type CharacterOptions = {
         strength: number,
         dexterity: number,
         intelligence: number,
-        condition: number
+        condition: number,
     },
     availableStatpoints: number,
-    role: CharacterRole
+    role: CharacterRole,
 };
 
-class Character extends GameObject<GameObjectType.Character> {
+export default class Character extends GameObject<GameObjectType.Character> {
     session: Session<SendersType>;
     role: CharacterRole;
     nickname: string;
@@ -81,13 +81,13 @@ class Character extends GameObject<GameObjectType.Character> {
     jobType: number;
     appearance: {
         hairType: number,
-        faceType: number
+        faceType: number,
     };
     progress: {
         level: number,
         experience: number,
         maxExperience: number,
-        skillpoint: number
+        skillpoint: number,
     };
     reward: Reward;
     reputation: number;
@@ -103,7 +103,7 @@ class Character extends GameObject<GameObjectType.Character> {
         [GameObjectType.Character]: any[],
         [GameObjectType.NPC]: any[],
         [GameObjectType.Monster]: any[],
-        [GameObjectType.Item]: any[]
+        [GameObjectType.Item]: any[],
     };
 
     // traits
@@ -206,7 +206,7 @@ class Character extends GameObject<GameObjectType.Character> {
                 this.statistics.health = baseCharacterStatistics.health;
                 this.statistics.maxHealth = new Statistic(baseCharacterStatistics.health);
             } else if (name === 'mana') {
-                this.statistics.mana =  baseCharacterStatistics.mana;
+                this.statistics.mana = baseCharacterStatistics.mana;
                 this.statistics.maxMana = new Statistic(baseCharacterStatistics.mana);
             } else {
                 this.statistics[name] = new Statistic(baseCharacterStatistics[name]);
@@ -257,23 +257,23 @@ class Character extends GameObject<GameObjectType.Character> {
         const plusFormula = (staticValue: number, plus: number) =>
             staticValue * Math.pow((plus >= 11) ? 1.07 : 1.06, plus);
 
-        let isArmor = (wearingPosition: number) => {
-            return wearingPosition == ItemWearingPosition.Helmet ||
-                wearingPosition == ItemWearingPosition.Shirt ||
-                wearingPosition == ItemWearingPosition.Pants ||
-                wearingPosition == ItemWearingPosition.Shield ||
-                wearingPosition == ItemWearingPosition.Gloves ||
-                wearingPosition == ItemWearingPosition.Boots;
+        const isArmor = (wearingPosition: number) => {
+            return wearingPosition === ItemWearingPosition.Helmet ||
+                wearingPosition === ItemWearingPosition.Shirt ||
+                wearingPosition === ItemWearingPosition.Pants ||
+                wearingPosition === ItemWearingPosition.Shield ||
+                wearingPosition === ItemWearingPosition.Gloves ||
+                wearingPosition === ItemWearingPosition.Boots;
         }
 
-        let isWeapon = (wearingPosition: number) => {
-            return wearingPosition == ItemWearingPosition.Weapon;
+        const isWeapon = (wearingPosition: number) => {
+            return wearingPosition === ItemWearingPosition.Weapon;
         }
 
         this.on(CharacterEvents.InventoryEquip, (item: InventoryItem) => {
-            if(isArmor(item.baseItem.wearingPosition)) {
-                let itemDefense = item.baseItem.values[0];
-                let itemMagicResist = item.baseItem.values[1];
+            if (isArmor(item.baseItem.wearingPosition)) {
+                const itemDefense = item.baseItem.values[0] ?? 0;
+                const itemMagicResist = item.baseItem.values[1] ?? 0;
 
                 const defenseModifier = new Modifier(ModifierType.Additive,
                     /* standard formula */ plusFormula(itemDefense, item.plus) +
@@ -294,17 +294,17 @@ class Character extends GameObject<GameObjectType.Character> {
 
                 this.buffs.add(armorBuff);
             }
-            else if(isWeapon(item.baseItem.wearingPosition)) {
-                let itemAttack = item.baseItem.values[0];
-                let totalItemAttack = plusFormula(itemAttack, item.plus) + (item.plus >= 15 ? 75 : 0);
+            else if (isWeapon(item.baseItem.wearingPosition)) {
+                const itemAttack = item.baseItem.values[0] ?? 0;
+                const totalItemAttack = plusFormula(itemAttack, item.plus) + (item.plus >= 15 ? 75 : 0);
 
                 let attackModifier = new Modifier(ModifierType.Additive, totalItemAttack);
 
                 if (this.progress.level < item.baseItem.level) {
-                    let levelDiff = item.baseItem.level - this.progress.level;
+                    const levelDiff = item.baseItem.level - this.progress.level;
 
                     if (levelDiff > 4) {
-                        let penaltyInPercent = (levelDiff > 12) ? .90 : (levelDiff > 8) ? .70 : (levelDiff > 4) ? .50 : 0;
+                        const penaltyInPercent = (levelDiff > 12) ? .90 : (levelDiff > 8) ? .70 : (levelDiff > 4) ? .50 : 0;
 
                         attackModifier = new Modifier(ModifierType.Negative, (totalItemAttack * penaltyInPercent));
                     }
@@ -319,9 +319,9 @@ class Character extends GameObject<GameObjectType.Character> {
         });
 
         this.on(CharacterEvents.InventoryUnequip, (item) => {
-            if(isArmor(item.baseItem.wearingPosition))
+            if (isArmor(item.baseItem.wearingPosition))
                 this.buffs.remove(null, BuffOrigin.Hardcoding, 'base-armor-' + item.baseItem.wearingPosition);
-            else if(isWeapon(item.baseItem.wearingPosition))
+            else if (isWeapon(item.baseItem.wearingPosition))
                 this.buffs.remove(null, BuffOrigin.Hardcoding, 'base-weapon');
         });
     }
@@ -334,7 +334,7 @@ class Character extends GameObject<GameObjectType.Character> {
     }
 
     removeVisibleObject(type: GameObjectType, uid: number) {
-        let visibleObjectUids = this.visibleObjectUids[type];
+        const visibleObjectUids = this.visibleObjectUids[type];
 
         if (visibleObjectUids.includes(uid))
             visibleObjectUids.splice(visibleObjectUids.indexOf(uid), 1);
@@ -421,7 +421,7 @@ class Character extends GameObject<GameObjectType.Character> {
             return bonus;
         }
 
-        let bonusHealth = calculateBonusHealth(
+        const bonusHealth = calculateBonusHealth(
             this.classType,
             this.progress.level,
             this.statpoints.strength.getTotalValue(),
@@ -431,7 +431,7 @@ class Character extends GameObject<GameObjectType.Character> {
             1 // multiplier
         );
 
-        let bonusMana = calculateBonusMana(
+        const bonusMana = calculateBonusMana(
             this.classType,
             this.progress.level,
             this.statpoints.strength.getTotalValue(),
@@ -441,7 +441,7 @@ class Character extends GameObject<GameObjectType.Character> {
             1 // multiplier
         );
 
-        let bonusAttack = calculateBonusAttack(
+        const bonusAttack = calculateBonusAttack(
             this.classType,
             this.progress.level,
             this.statpoints.strength.getTotalValue(),
@@ -454,18 +454,18 @@ class Character extends GameObject<GameObjectType.Character> {
         const manaModifier = new Modifier(ModifierType.Additive, bonusMana);
         const attackModifier = new Modifier(ModifierType.Additive, bonusAttack);
 
-        let healthBuff = new Buff(this, BuffOrigin.Hardcoding, 'base-health', [
+        const healthBuff = new Buff(this, BuffOrigin.Hardcoding, 'base-health', [
             [this.statistics.maxHealth, healthModifier]
         ]);
 
-        let manaBuff = new Buff(this, BuffOrigin.Hardcoding, 'base-mana', [
+        const manaBuff = new Buff(this, BuffOrigin.Hardcoding, 'base-mana', [
             [this.statistics.maxMana, manaModifier]
         ]);
 
-        let attackBuff = new Buff(this, BuffOrigin.Hardcoding, 'base-attack', [
+        const attackBuff = new Buff(this, BuffOrigin.Hardcoding, 'base-attack', [
             [this.statistics.attack, attackModifier]
         ]);
-        
+
         this.buffs.add(healthBuff);
         this.buffs.add(manaBuff);
         this.buffs.add(attackBuff);
@@ -524,5 +524,3 @@ class Character extends GameObject<GameObjectType.Character> {
         this.emit(CharacterEvents.EnterGame, /* spawnedFirstTime */);
     }
 }
-
-export default Character;

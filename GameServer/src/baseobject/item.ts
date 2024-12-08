@@ -18,7 +18,7 @@ type ItemOptions = {
     values: number[],
 };
 
-class BaseItem extends BaseObject {
+export default class BaseItem extends BaseObject {
 
     type: number;
     subType: number;
@@ -51,5 +51,3 @@ class BaseItem extends BaseObject {
     }
 
 }
-
-export default BaseItem;

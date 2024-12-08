@@ -1,6 +1,6 @@
 import character from "./character";
-import item from "./item";
 import chat from "./chat";
+import item from "./item";
 
 export default {
     character,

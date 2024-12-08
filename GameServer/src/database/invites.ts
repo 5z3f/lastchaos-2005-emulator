@@ -1,15 +1,17 @@
 import log from "@local/shared/logger";
+import type { UpsertResult } from "mariadb";
 import app from "../app";
 import { InviteType } from "../system/core/invite";
+import type { TableInvites } from "./types";
 
-export default class invite {
+export default class Invite {
     public static async getByType(inviteType: InviteType) {
         const query = `
             SELECT * FROM invites
             WHERE type = ? AND accepted = 0 AND resolvedAt IS NULL`;
 
         try {
-            const result = await app.dbc.execute(query, [
+            const result: TableInvites[] = await app.dbc.execute(query, [
                 inviteType
             ]);
 
@@ -27,7 +29,7 @@ export default class invite {
             VALUES (?, ?, ?)`;
 
         try {
-            const result = await app.dbc.execute(query, [
+            const result: UpsertResult = await app.dbc.execute(query, [
                 inviteType,
                 requester,
                 receiver
@@ -48,7 +50,7 @@ export default class invite {
             WHERE id = ?`;
 
         try {
-            const result = await app.dbc.execute(query, [
+            const result: UpsertResult = await app.dbc.execute(query, [
                 accepted,
                 id
             ]);

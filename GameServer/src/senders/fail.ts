@@ -1,13 +1,13 @@
 import Message from '@local/shared/message';
-import _messages from './_messages.json';
-import { SendersType } from '.';
 import Session from '@local/shared/session';
+import { SendersType } from '.';
+import _messages from './_messages.json';
 
 export enum FailMessageType {
     // MANY_CONNECT,
     // WRONG_VERSION,
     // WRONG_CHAR,
-    
+
     IncorrectCredentials = 3,
 
     // ALREADY_CONNECT,
@@ -24,7 +24,7 @@ export enum FailMessageType {
 
     CharacterDoesntExist = 13,
     DatabaseFailure = 14,
-    
+
     // BILLING_NOT_PAY,
     // BILLING_NOT_RIGHT,
     // BILLING_TIME_OUT,
@@ -60,12 +60,12 @@ export enum FailMessageType {
     // DB_DELETE_DELAY_CHAR,
     // SCARD_NOT_MATCHING,
     // LOGINSERV_BLOCK_USER,
-    // TIME_OUT
+    // TIME_OUT,
 }
 
 export default function (session: Session<SendersType>) {
     return (subType: FailMessageType) => {
-        let msg = new Message({ type: _messages.MSG_FAIL, subType })
+        const msg = new Message({ type: _messages.MSG_FAIL, subType })
         session.write(msg.build());
     }
 }

@@ -2,16 +2,16 @@ import BaseItem from './baseobject/item';
 import BaseMonster from './baseobject/monster';
 import BaseNPC from './baseobject/npc';
 
-import * as buffScripts from '../data/buffs';
 import log from '@local/shared/logger';
+import * as buffScripts from '../data/buffs';
 
 export enum ContentType {
     Item,
     Monster,
-    NPC
+    NPC,
 };
 
-class content {
+export default class Content {
     items: BaseItem[] = [];
     monsters: BaseMonster[] = [];
     npcs: BaseNPC[] = [];
@@ -36,7 +36,7 @@ class content {
     load(type: ContentType, fp: string) {
         const objs = require(fp);
 
-        for (let o of objs) {
+        for (const o of objs) {
             if (!o.enabled)
                 continue;
 
@@ -59,7 +59,7 @@ class content {
 
     loadBuffScripts() {
         for (const buffId in buffScripts) {
-            const buffScript = buffScripts[buffId];
+            const buffScript = buffScripts[buffId as keyof typeof buffScripts];
             this.buffs.push(buffScript);
         }
     }
@@ -86,5 +86,3 @@ class content {
         }
     }
 }
-
-export default content;

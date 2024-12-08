@@ -1,16 +1,17 @@
 import Message from '@local/shared/message';
-import _messages from './_messages.json';
 import Session from '@local/shared/session';
 import game from '../game';
+import _messages from './_messages.json';
 
 import { SendersType } from '.';
-import { ExtendMessageType, ExtendMessengerType } from '../handlers/MSG_EXTEND';
 import { GameObjectType } from '../gameobject';
+import type Character from '../gameobject/character';
+import { ExtendMessageType, ExtendMessengerType } from '../handlers/MSG_EXTEND';
 
 type ExtendMessageGroupListData = {
     subType: ExtendMessageType.Messenger;
     thirdType: ExtendMessengerType.GroupList;
-    
+
     groupCount: number;
     groupId: number;
     groupName: string;
@@ -50,7 +51,7 @@ type ExtendMessageData = ExtendMessageGroupListData | ExtendMessageChatData | Ex
 
 export default function (session: Session<SendersType>) {
     return (data: ExtendMessageData) => {
-        let msg = new Message({ type: _messages.MSG_EXTEND });
+        const msg = new Message({ type: _messages.MSG_EXTEND });
 
         // we can't write subType directly because it's a int32 here
         msg.write('i32>', data.subType);
@@ -59,7 +60,7 @@ export default function (session: Session<SendersType>) {
             case ExtendMessageType.Messenger:
                 msg.write('u8', data.thirdType);
 
-                switch(data.thirdType) {
+                switch (data.thirdType) {
                     case ExtendMessengerType.GroupList:
                         // TODO: implement multiple groups
                         msg.write('i32>', data.groupCount);
@@ -78,7 +79,7 @@ export default function (session: Session<SendersType>) {
                         msg.write('stringnt', data.senderNickname);
                         break;
                     case ExtendMessengerType.OneVsOne:
-                        const senderChar = game.world.find(GameObjectType.Character, (c) => c.uid === data.senderUid);
+                        const senderChar = game.world.find(GameObjectType.Character, (c: Character) => c.uid === data.senderUid);
 
                         msg.write('i32>', data.senderUid);
                         msg.write('stringnt', data.senderNickname || senderChar.nickname);
@@ -86,7 +87,7 @@ export default function (session: Session<SendersType>) {
                         msg.write('i32>', data.colorId);
                         msg.write('stringnt', data.text);
                         break;
-                        
+
                 }
         }
 

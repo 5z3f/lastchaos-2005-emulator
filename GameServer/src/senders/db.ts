@@ -1,8 +1,8 @@
-import Message from '@local/shared/message';
-import _messages from './_messages.json';
-import { SendersType } from '.';
-import Session from '@local/shared/session';
 import log from '@local/shared/logger';
+import Message from '@local/shared/message';
+import Session from '@local/shared/session';
+import { SendersType } from '.';
+import _messages from './_messages.json';
 
 const WEAR_COUNT = 7;
 
@@ -12,7 +12,7 @@ export enum DBMessageType {
     OK,
     CharacterExist,
     CharacterExistEnd,
-    OtherServer
+    OtherServer,
 }
 
 interface DBCharacter {
@@ -41,7 +41,7 @@ interface DBMessageData {
     wearingItems?: WearingItem[];
 }
 
-function buildCharacterExistMessage(msg, dbCharacter: DBCharacter, wearingItems: WearingItem[]) {
+function buildCharacterExistMessage(msg: Message, dbCharacter: DBCharacter, wearingItems: WearingItem[]) {
     msg.write('i32>', dbCharacter.id);              // Character ID (UID)
     msg.write('stringnt', dbCharacter.nickname);    // Nickname
     msg.write('u8', dbCharacter.class);             // Class
@@ -58,7 +58,7 @@ function buildCharacterExistMessage(msg, dbCharacter: DBCharacter, wearingItems:
     msg.write('i32>', dbCharacter.recentMana);      // TODO: Max mana Points
 
     for (let pos = 0; pos < WEAR_COUNT; pos++) {
-        let item = wearingItems.find((i) => i.wearingPosition == pos);
+        const item = wearingItems.find((i) => i.wearingPosition === pos);
 
         msg.write('i32>', item?.itemId || -1);
         msg.write('i32>', item?.plus || 0);
@@ -69,11 +69,23 @@ function buildCharacterExistMessage(msg, dbCharacter: DBCharacter, wearingItems:
 
 export default function (session: Session<SendersType>) {
     return ({ subType, dbCharacter, wearingItems }: DBMessageData) => {
-        let msg = new Message({ type: _messages.MSG_DB, subType: subType });
+        const msg = new Message({ type: _messages.MSG_DB, subType: subType });
 
         switch (subType) {
             case DBMessageType.CharacterExist:
-                buildCharacterExistMessage(msg, dbCharacter, wearingItems);
+                {
+                    if (!dbCharacter) {
+                        log.error('dbCharacter is not defined');
+                        return;
+                    }
+
+                    if (!wearingItems) {
+                        log.error('wearingItems is not defined');
+                        return;
+                    }
+
+                    buildCharacterExistMessage(msg, dbCharacter, wearingItems);
+                }
                 break;
             case DBMessageType.CharacterExistEnd:
             case DBMessageType.OK:

@@ -1,6 +1,6 @@
 
-import { SmartBuffer } from 'smart-buffer';
 import lccrypt from '@local/shared/lccrypt';
+import { SmartBuffer } from 'smart-buffer';
 //import game from '../GameServer/src/game'; // TODO: move this
 
 const game = {
@@ -8,12 +8,12 @@ const game = {
     encryption: false,
 };
 
-type DataTypeToReturnType<T> = 
+type DataTypeToReturnType<T> =
     T extends 'stringnt' ? string :
     T extends 'i8' | 'u8' | 'i16<' | 'i16>' | 'u16<' | 'u16>' | 'i32<' | 'i32>' | 'u32<' | 'u32>' | 'f<' | 'f>' ? number :
     T extends 'i64<' | 'i64>' | 'u64<' | 'u64>' ? bigint :
     never;
-    
+
 type dataTypes = 'i8' | 'u8' | 'i16<' | 'i16>' | 'u16<' | 'u16>' | 'i32<' | 'i32>' | 'u32<' | 'u32>' | 'i64<' | 'i64>' | 'u64<' | 'u64>' | 'f<' | 'f>' | 'stringnt';
 
 type MessageOptions = {
@@ -24,7 +24,7 @@ type MessageOptions = {
     encrypted?: boolean, // is packet encrypted?
 };
 
-class Message {
+export default class Message {
     _sb;
     header;
     encrypted;
@@ -47,7 +47,7 @@ class Message {
         } : null;
 
         if (buffer && this.encrypted && game.encryption) {
-            let decrypted = Message.decrypt(buffer.slice(12));          // TODO: implement error handler
+            const decrypted = Message.decrypt(buffer.slice(12));          // TODO: implement error handler
             this._sb = SmartBuffer.fromBuffer(decrypted);
         }
 
@@ -80,7 +80,7 @@ class Message {
      */
     build(header = true, encrypt = true): Buffer {
         const makeHeader = (messageSize: number) => {
-            let writer = new SmartBuffer();
+            const writer = new SmartBuffer();
 
             writer.writeUInt16BE((1 << 0) | (1 << 7) | (1 << 8));                       // reliable
             writer.writeUInt32BE(0);                                                    // sequence
@@ -95,7 +95,7 @@ class Message {
             : Buffer.concat([makeHeader(this._sb.length).toBuffer(), encrypt !== false && game.encryption ? Message.encrypt(this._sb.toBuffer()) : this._sb.toBuffer()]);
     }
 
-    read<T extends dataTypes>(type: T) : DataTypeToReturnType<T> {
+    read<T extends dataTypes>(type: T): DataTypeToReturnType<T> {
         let val;
 
         const isLittleEndian = type.endsWith('<');
@@ -115,12 +115,10 @@ class Message {
             'f': isLittleEndian ? this._sb.readFloatLE : this._sb.readFloatBE,
         };
 
-        const method = typeToMethod[baseType];
-
-        if (!method) {
+        const method = typeToMethod[baseType as keyof typeof typeToMethod] as any;
+        if (!method)
             throw new Error(`Unsupported type: ${baseType}`);
-        }
-    
+
         return method.call(this._sb);
     }
 
@@ -146,5 +144,3 @@ class Message {
         }
     }
 };
-
-export default Message;

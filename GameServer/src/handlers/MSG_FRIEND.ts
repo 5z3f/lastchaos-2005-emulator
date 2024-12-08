@@ -1,14 +1,13 @@
-import game from '../game';
-import database from '../database';
 import Message from '@local/shared/message';
 import Session from '@local/shared/session';
-import { SendersType } from '../senders';
-import Character from '../gameobject/character';
-import { FailMessageType } from '../senders/fail';
-import Invite, { InviteType } from '../system/core/invite';
-import { Color } from '../system/core/chat';
 import api from '../api';
+import game from '../game';
 import { GameObjectType } from '../gameobject';
+import Character from '../gameobject/character';
+import { SendersType } from '../senders';
+import { FailMessageType } from '../senders/fail';
+import { Color } from '../system/core/chat';
+import Invite, { InviteType } from '../system/core/invite';
 
 export enum FriendStatusType {
     Offline,
@@ -26,7 +25,7 @@ export enum FriendMessageType {
     Delete = 6,
     NotifyAdd = 7,
     NotifyDelete = 8,
-    List = 9
+    List = 9,
 }
 
 export enum FriendMessageErrorType {
@@ -42,26 +41,28 @@ export enum FriendMessageErrorType {
     IncorrectNameLength = 9,
     AlreadyBlock = 10,
     NotBlock = 11,
-    RegistRefusePVP = 12    
+    RegistRefusePVP = 12,
 }
 
 // TODO: move it (almost all) into system/core/messenger.ts
 
 async function handleFriendshipRequest(session: Session<SendersType>, msg: Message) {
-    let requesterUid = msg.read('i32>');
-    let receiverName = msg.read('stringnt');
-    
+    const requesterUid = msg.read('i32>');
+    const receiverName = msg.read('stringnt');
+
     if (receiverName.length < 2 || receiverName.length > 16) {
         session.send.friend({ subType: FriendMessageType.Error, code: FriendMessageErrorType.IncorrectNameLength });
         return;
     }
 
-    if (requesterUid != session.character.uid) {
+    const character = session.character!;
+
+    if (requesterUid != character.uid) {
         // TODO: packet is malformed, log it
         return;
     }
 
-    let receiverCharacter: Character = game.world.find(GameObjectType.Character, (ch: Character) => ch.nickname === receiverName);
+    const receiverCharacter: Character = game.world.find(GameObjectType.Character, (ch: Character) => ch.nickname === receiverName);
 
     // TODO: offline invites (if possible?)
     if (!receiverCharacter) {
@@ -70,7 +71,7 @@ async function handleFriendshipRequest(session: Session<SendersType>, msg: Messa
     }
 
     // TODO: Multiple pending invites (if possible?)
-    const anotherPendingInvite = game.invites.find(i => i.type === InviteType.Friend && i.receiverId === receiverCharacter.id && i.requesterId != session.character.id);
+    const anotherPendingInvite = game.invites.find(i => i.type === InviteType.Friend && i.receiverId === receiverCharacter.id && i.requesterId != character.id);
     if (anotherPendingInvite) {
         session.send.friend({ subType: FriendMessageType.Error, code: FriendMessageErrorType.WaitOther });
         return;
@@ -80,14 +81,14 @@ async function handleFriendshipRequest(session: Session<SendersType>, msg: Messa
     // TODO: refuse to create invite if receiver is in pvp mode
 
     // remove previous invite (if exists)
-    const previousPendingInvite = game.invites.find(i => i.type === InviteType.Friend && i.receiverId === receiverCharacter.id && i.requesterId === session.character.id);
-    
-    if(previousPendingInvite)
+    const previousPendingInvite = game.invites.find(i => i.type === InviteType.Friend && i.receiverId === receiverCharacter.id && i.requesterId === character.id);
+
+    if (previousPendingInvite)
         await previousPendingInvite.remove();
 
-    const invite = await Invite.create(InviteType.Friend, session.character, receiverCharacter);
+    const invite = await Invite.create(InviteType.Friend, character, receiverCharacter);
 
-    if(!invite) {
+    if (!invite) {
         session.send.fail(FailMessageType.DatabaseFailure);
         return;
     }
@@ -97,24 +98,25 @@ async function handleFriendshipRequest(session: Session<SendersType>, msg: Messa
     receiverCharacter.session.send.friend({
         subType: FriendMessageType.Request,
         requesterIndex: requesterUid,
-        requesterName: session.character.nickname,
+        requesterName: character.nickname,
     });
 
-    api.chat.system(session.character, `You have sent a friend request to ${receiverCharacter.nickname}.`, Color.Silver);
-    api.chat.system(receiverCharacter, `${session.character.nickname} has sent you a friend request.`, Color.Silver);
+    api.chat.system(character, `You have sent a friend request to ${receiverCharacter.nickname}.`, Color.Silver);
+    api.chat.system(receiverCharacter, `${character.nickname} has sent you a friend request.`, Color.Silver);
 }
 
 async function handleFriendshipAccept(session: Session<SendersType>, msg: Message) {
     const receiverUid = msg.read('i32>');
     const requesterName = msg.read('stringnt');
+    const character = session.character!;
 
-    if (receiverUid != session.character.uid) {
+    if (receiverUid != character.uid) {
         // TODO: packet is malformed, log it
         return;
     }
 
     // TODO: multiple pending invites (if possible?)
-    const invite = game.invites.find(i => i.type === InviteType.Friend && i.receiverId === session.character.id);
+    const invite = game.invites.find(i => i.type === InviteType.Friend && i.receiverId === character.id);
 
     if (!invite) {
         session.send.friend({
@@ -125,7 +127,7 @@ async function handleFriendshipAccept(session: Session<SendersType>, msg: Messag
     }
 
     const resolved = await invite.resolve(true);
-    
+
     if (!resolved) {
         session.send.friend({
             subType: FriendMessageType.Error,
@@ -145,7 +147,8 @@ async function handleFriendshipCancel(session: Session<SendersType>, msg: Messag
         return;
     }
 
-    const invite = game.invites.find(i => i.type === InviteType.Friend && i.receiverId === session.character.id);
+    const character = session.character!;
+    const invite = game.invites.find(i => i.type === InviteType.Friend && i.receiverId === character.id);
 
     if (!invite) {
         session.send.friend({
@@ -156,7 +159,7 @@ async function handleFriendshipCancel(session: Session<SendersType>, msg: Messag
     }
 
     const resolved = await invite.resolve(false);
-    
+
     if (!resolved) {
         session.send.friend({
             subType: FriendMessageType.Error,
@@ -170,13 +173,14 @@ async function handleFriendshipDelete(session: Session<SendersType>, msg: Messag
     const requesterId = msg.read('i32>');
     const targetId = msg.read('i32>');
     const nickname = msg.read('stringnt');
+    const character = session.character!;
 
-    if(requesterId != session.character.uid) {
+    if (requesterId != character.uid) {
         // TODO: packet is malformed, log it
         return;
     }
 
-    const requesterCharacter: Character = game.world.find(GameObjectType.Character, (ch: Character) => ch.uid === session.character.uid);
+    const requesterCharacter: Character = game.world.find(GameObjectType.Character, (ch: Character) => ch.uid === character.uid);
     requesterCharacter.messenger.removeFriend(targetId);
 }
 
@@ -189,17 +193,18 @@ function handleStatusChange(session: Session<SendersType>, msg: Message) {
         return;
     }
 
-    if (characterUid != session.character.uid) {
+    const character = session.character!;
+    if (characterUid != character.uid) {
         // TODO: packet is malformed, log it
         return;
     }
 
-    session.character.messenger.status = status;
+    character.messenger.status = status;
 }
 
 
 export default function (session: Session<SendersType>, msg: Message) {
-    let subType = msg.read('u8');
+    const subType = msg.read('u8');
 
     switch (subType) {
         case FriendMessageType.Request:

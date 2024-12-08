@@ -1,13 +1,12 @@
 import log from "@local/shared/logger";
+import api from "../../api";
 import database from "../../database";
+import game from "../../game";
+import { GameObjectType } from "../../gameobject";
 import Character, { ClassType } from "../../gameobject/character";
 import { FriendMessageType, FriendStatusType } from "../../handlers/MSG_FRIEND";
 import { FailMessageType } from "../../senders/fail";
-import Invite, { InviteType } from "./invite";
-import api from "../../api";
 import { Color } from "./chat";
-import game from "../../game";
-import { GameObjectType } from "../../gameobject";
 
 class MessengerMessage {
     senderId: number;
@@ -31,7 +30,7 @@ export enum ChatType {
     Party,
     Guild,
     Shout,
-    Private
+    Private,
 }
 
 class Friend {
@@ -61,13 +60,13 @@ class Friend {
             return;
         }
 
-        for(let result of results) {
-            let messengerMsg = new MessengerMessage(
-                result.senderId,
-                result.receiverId,
+        for (let result of results) {
+            const messengerMsg = new MessengerMessage(
+                result.sender,
+                result.receiver,
                 result.text,
-                result.sent,
-                result.date
+                !!result.sent,
+                result.createdAt
             );
 
             this.history.push(messengerMsg);
@@ -88,7 +87,7 @@ class Friend {
     }
 }
 
-class Messenger {
+export default class Messenger {
     owner: Character;
     friends: Friend[] = [];
     private _status: FriendStatusType = FriendStatusType.Offline;
@@ -101,23 +100,23 @@ class Messenger {
     public get status(): FriendStatusType {
         return this._status;
     }
-    
+
     public set status(status: FriendStatusType) {
         this._status = status;
-    
-        for(let friend of this.friends) {
+
+        for (let friend of this.friends) {
             const friendCharacter = game.world.find(GameObjectType.Character, (ch: Character) => ch.id === friend.id);
-            
-            if(!friendCharacter)
+
+            if (!friendCharacter)
                 continue;
-    
-            let meAsFriend: Friend = friendCharacter.messenger.friends.find((f: Friend) => f.id === this.owner.id);
-    
-            if(!meAsFriend)
+
+            const meAsFriend: Friend = friendCharacter.messenger.friends.find((f: Friend) => f.id === this.owner.id);
+
+            if (!meAsFriend)
                 continue;
-    
-            meAsFriend.status = this._status;    
-    
+
+            meAsFriend.status = this._status;
+
             friendCharacter.session.send.friend({
                 subType: FriendMessageType.ChangeStatus,
                 requesterId: this.owner.id,
@@ -135,7 +134,7 @@ class Messenger {
         }
 
 
-        for(let dbFriend of dbFriends) {
+        for (let dbFriend of dbFriends) {
             const friend = new Friend(this.owner, dbFriend.friendId, dbFriend.nickname, dbFriend.class);
             await friend.loadHistory();
 
@@ -143,21 +142,23 @@ class Messenger {
         }
     }
 
-    
+
     public async addFriend(characterId: number) {
         const dbFriendCharacter = await database.characters.getById(characterId);
+        if (!dbFriendCharacter)
+            return;
 
         const friend = new Friend(this.owner, characterId, dbFriendCharacter.nickname, dbFriendCharacter.class);
         await friend.loadHistory();
 
         this.friends.push(friend);
-        friend.show();    
+        friend.show();
     }
 
     public async removeFriend(characterId: number) {
         const friend = this.friends.find(f => f.id === characterId);
 
-        if(!friend) {
+        if (!friend) {
             log.error(`Failed to find friend ${characterId} in ${this.owner.id}'s friend list.`);
             return;
         }
@@ -173,12 +174,12 @@ class Messenger {
 
         const friendCharacter = game.world.find(GameObjectType.Character, (ch: Character) => ch.id === characterId);
 
-        if(!friendCharacter)
+        if (!friendCharacter)
             return;
 
         const meAsFriend: Friend = friendCharacter.messenger.friends.find((f: Friend) => f.id === this.owner.id);
 
-        if(!meAsFriend) {
+        if (!meAsFriend) {
             log.error(`Failed to find ${this.owner.id} in ${friendCharacter.id}'s friend list.`)
             return;
         }
@@ -193,5 +194,3 @@ class Messenger {
         api.chat.system(friendCharacter, `${this.owner.nickname} has ended the friendship with you.`, Color.IndianRed);
     }
 }
-
-export default Messenger;

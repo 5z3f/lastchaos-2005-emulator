@@ -1,3 +1,4 @@
+import type { PositionProps } from '../types/position';
 import BaseObject from './index';
 
 type statistics = {
@@ -19,14 +20,8 @@ type statistics = {
 
 type Spawn = {
     zoneId: number,
-    position: {
-        x: number,
-        y: number,
-        z: number,
-        r: number,
-        layer: number
-    },
-    respawnTime: number
+    position: PositionProps,
+    respawnTime: number,
 };
 
 type MonsterOptions = {
@@ -49,7 +44,7 @@ type MonsterOptions = {
     },
 };
 
-class BaseMonster extends BaseObject {
+export default class BaseMonster extends BaseObject {
 
     vision: number;
     attackType: number;
@@ -108,5 +103,3 @@ class BaseMonster extends BaseObject {
     }
 
 }
-
-export default BaseMonster;

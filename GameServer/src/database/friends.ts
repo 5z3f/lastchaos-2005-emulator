@@ -1,7 +1,8 @@
 import log from "@local/shared/logger";
+import type { UpsertResult } from "mariadb";
 import app from "../app";
 
-class friends {
+export default class Friends {
     public static async get(characterId: number) {
         const query = `
             SELECT friends.id as friendId, characters.nickname, characters.class FROM friends
@@ -11,7 +12,7 @@ class friends {
             SELECT friends.id2 as friendId, characters.nickname, characters.class FROM friends
             JOIN characters ON friends.id2 = characters.id
             WHERE friends.id = ?`;
-            
+
         try {
             const result = await app.dbc.execute(query, [
                 characterId,
@@ -32,7 +33,7 @@ class friends {
             VALUES (?, ?)`;
 
         try {
-            const result = await app.dbc.execute(query, [
+            const result: UpsertResult = await app.dbc.execute(query, [
                 characterId,
                 friendId
             ]);
@@ -66,5 +67,3 @@ class friends {
         }
     }
 }
-
-export default friends;

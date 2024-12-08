@@ -1,9 +1,9 @@
-import EventEmitter from '../events';
-import { Statistic, Modifier, ModifierType } from '../system/core/statistic';
-import Position from '../types/position';
-import util from '../util';
 import log from '@local/shared/logger';
 import App from '../app';
+import EventEmitter from '../events';
+import { Statistic } from '../system/core/statistic';
+import Position from '../types/position';
+import { createSessionId, getRandomInt } from '../util';
 import Zone from '../zone';
 
 export enum GameObjectEvents {
@@ -12,7 +12,7 @@ export enum GameObjectEvents {
     Move = 'gameobject:move',
     Respawn = 'gameobject:respawn',
     Heal = 'gameobject:heal',
-    Die = 'gameobject:die'
+    Die = 'gameobject:die',
 };
 
 export enum CharacterEvents {
@@ -23,12 +23,12 @@ export enum CharacterEvents {
     EnterGame = 'game:enter',
     StatisticUpdate = 'statistic:update',
     BuffApply = 'buff:apply',
-    BuffRemove = 'buff:remove'
+    BuffRemove = 'buff:remove',
 };
 
 export enum PacketObjectType {
     Character,
-    NPC
+    NPC,
 };
 
 export enum MonsterEvents {
@@ -40,7 +40,7 @@ export enum GameObjectType {
     Character = 'Character',
     Monster = 'Monster',
     NPC = 'NPC',
-    Item = 'Item' // ?
+    Item = 'Item', // ?
 };
 
 type Events<T> = T extends GameObjectType.Character ? CharacterEvents :
@@ -74,10 +74,10 @@ type GameObjectOptions = {
     flags: string[],
     zone: Zone,
     position?: Position,
-    areaId: number
+    areaId: number,
 };
 
-class GameObject<T extends GameObjectType> extends EventEmitter<Events<T> | GameObjectEvents> {
+export default class GameObject<T extends GameObjectType> extends EventEmitter<Events<T> | GameObjectEvents> {
     uid: number;
     id: number;
     flags: string[];
@@ -94,7 +94,7 @@ class GameObject<T extends GameObjectType> extends EventEmitter<Events<T> | Game
 
     state: {
         dead: boolean,
-        inCombat: () => boolean
+        inCombat: () => boolean,
     };
 
     lastAttackTime: number;
@@ -116,9 +116,9 @@ class GameObject<T extends GameObjectType> extends EventEmitter<Events<T> | Game
         attackSpeed: Statistic,
     };
 
-    type: T;
+    type!: T;
     respawnCount: number = 0;
-    objType: PacketObjectType;
+    objType!: PacketObjectType;
 
     // we need to store all timeouts/intervals to clear them when object is disposed
     timeoutIds: NodeJS.Timeout[];
@@ -130,7 +130,7 @@ class GameObject<T extends GameObjectType> extends EventEmitter<Events<T> | Game
         this.timeoutIds = [];
         this.intervalIds = [];
 
-        this.uid = uid || util.createSessionId();   // unique id
+        this.uid = uid || createSessionId();   // unique id
         this.id = id;
 
         this.flags = flags;
@@ -238,7 +238,7 @@ class GameObject<T extends GameObjectType> extends EventEmitter<Events<T> | Game
         });
 
         // insert updated position
-        let qtPointObj: any = {
+        const qtPointObj: any = {
             x: this.position.x,
             y: this.position.y,
             uid: this.uid,
@@ -269,11 +269,11 @@ class GameObject<T extends GameObjectType> extends EventEmitter<Events<T> | Game
 
     regenInterval?: NodeJS.Timer = undefined;
     startRegen() {
-        let regenTick = 1 * 5000;
+        const regenTick = 1 * 5000;
 
         this.regenInterval = setInterval(() => {
             const regenAmount = this.statistics.healthRegen.getTotalValue();
-           // this.heal(regenAmount);
+            // this.heal(regenAmount);
         }, regenTick);
     }
 
@@ -296,7 +296,7 @@ class GameObject<T extends GameObjectType> extends EventEmitter<Events<T> | Game
     }
 
     move(range: number) {
-        let randomMoveType = util.getRandomInt(0, 2);
+        const randomMoveType = getRandomInt(0, 2);
 
         if (!this.canMove())
             return;
@@ -321,10 +321,8 @@ class GameObject<T extends GameObjectType> extends EventEmitter<Events<T> | Game
             return;
 
         range = 50;
-        let randomMovementTick = util.getRandomInt(3, 15) * 1000;
+        const randomMovementTick = getRandomInt(3, 15) * 1000;
 
         setInterval(function (that) { that.move(range) }, randomMovementTick, this);
     }
 }
-
-export default GameObject;

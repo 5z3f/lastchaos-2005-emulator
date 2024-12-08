@@ -1,8 +1,9 @@
 import log from "@local/shared/logger";
-import app from "../app";
+import type { UpsertResult } from "mariadb";
 import { ItemPlaceType, ItemWearingPosition } from "../api/item";
+import app from "../app";
 
-class inventory {
+export default class Inventory {
     /**
      * Adds an item to the inventory.
      * @param itemUid - The unique identifier of the item.
@@ -11,14 +12,14 @@ class inventory {
      * @param position - The position of the item. (tab,col,row)
      * @returns A boolean indicating whether the item was successfully added.
      */
-    static async add(itemUid: number, accountId: number, charId: number, position: string) {   
+    static async add(itemUid: number, accountId: number, charId: number, position: string) {
         const newInventoryItemQuery = `
             UPDATE items
             SET accountId = ?, charId = ?, place = ?, position = ?
             WHERE id = ? OR parentId = ?`;
 
         try {
-            const result = await app.dbc.query(newInventoryItemQuery, [
+            const result: UpsertResult = await app.dbc.query(newInventoryItemQuery, [
                 accountId,
                 charId,
                 ItemPlaceType.Inventory,
@@ -42,7 +43,7 @@ class inventory {
             WHERE id = ? OR parentId = ?`;
 
         try {
-            const result = await app.dbc.query(moveInventoryItemQuery, [
+            const result: UpsertResult = await app.dbc.query(moveInventoryItemQuery, [
                 position,
                 itemUid,
                 itemUid
@@ -63,7 +64,7 @@ class inventory {
             WHERE charId = ? AND id = ?`;
 
         try {
-            const result = await app.dbc.query(equipInventoryItemQuery, [
+            const result: UpsertResult = await app.dbc.query(equipInventoryItemQuery, [
                 wearingPosition,
                 charId,
                 itemUid
@@ -84,7 +85,7 @@ class inventory {
             WHERE charId = ? AND id = ?`;
 
         try {
-            const result = await app.dbc.query(equipInventoryItemQuery, [
+            const result: UpsertResult = await app.dbc.query(equipInventoryItemQuery, [
                 charId,
                 itemUid
             ]);
@@ -97,5 +98,3 @@ class inventory {
         }
     }
 }
-
-export default inventory;

@@ -5,7 +5,7 @@ export enum ModifierType {
     Percentual,
     Multiplicator,
     Divisor,
-    Negative
+    Negative,
 };
 
 export enum ModifierOrigin {
@@ -14,16 +14,16 @@ export enum ModifierOrigin {
     Item,
     Skill,
     Monster,
-    Quest
+    Quest,
 };
 
 export enum ModifierEffectType {
     Instant,
-    Overtime
+    Overtime,
 };
 
 export enum StatisticEvents {
-    Change = 'statistic:change'
+    Change = 'statistic:change',
 };
 
 /**
@@ -113,10 +113,10 @@ export class Statistic extends EventEmitter<StatisticEvents> {
         for (const mod of modifiers) {
             this.modifiers.push(mod);
 
-            if(mod.effectType == ModifierEffectType.Overtime) {
+            if (mod.effectType === ModifierEffectType.Overtime) {
                 mod.intervalId = setInterval(() => {
-                    if(mod.startTime + mod.applicationTime < Date.now())
-                        clearInterval(mod.intervalId);
+                    if (mod.startTime + mod.applicationTime < Date.now())
+                        clearInterval(mod.intervalId!);
 
                     this.totalValue = this.getModifiedValue();
                 }, mod.applicationTick);
@@ -248,7 +248,7 @@ export class Modifier {
         effectType: ModifierEffectType = ModifierEffectType.Instant,
         applicationTime: number = 1000,
         applicationTick: number = 1000
-    ) {        
+    ) {
         this.value = value;
         this.type = type;
         this.effectType = effectType;
@@ -313,10 +313,10 @@ export class Modifier {
     applyOvertime(statisticValue: number, value: number, currentTime: number): number {
         // Calculate elapsed time since the modifier was applied
         const elapsedTime = currentTime - this.startTime;
-    
+
         // Calculate the fraction of the modifier's value to apply based on elapsed time
         const fraction = Math.min(1, elapsedTime / this.applicationTime);
-    
+
         // Apply the fraction of the modifier's value
         switch (this.type) {
             case ModifierType.Additive:

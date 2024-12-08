@@ -1,4 +1,3 @@
-import api from "../../api";
 import game from "../../game";
 import { GameObjectType } from "../../gameobject";
 import Character, { CharacterRole } from "../../gameobject/character";
@@ -23,10 +22,10 @@ export enum ChatType {
     NoticePressCorps,
 
     // FIXME: temporary(?) solution to send custom system messages
-    System = -999
+    System = -999,
 }
 
-export enum ChatColors { 
+export enum ChatColors {
     Normal = 0xCCCCCCFF,                    // Light Gray
     Party = 0x91A7EAFF,                     // Light Blue
     Guild = 0xD6A6D6FF,                     // Light Purple
@@ -35,10 +34,11 @@ export enum ChatColors {
     Shout = 0xFF96BEFF,                     // Pink
     Notice = 0xE18600FF,                    // Dark Orange
     Lord = 0xf6f82dFF,                      // Yellow
-    Ranker = 0x00EDBDFF                     // Turquoise
+    Ranker = 0x00EDBDFF,                     // Turquoise
 }
 
 export enum Color {
+    None = 0,
     IndianRed = 0xCD5C5CFF,
     Maroon = 0x800000FF,
     Olive = 0x808000FF,
@@ -80,12 +80,12 @@ export enum Color {
     Tomato = 0xFF6347FF,
     OrangeRed = 0xFF4500FF,
     Red = 0xFF0000FF,
-    Pink = 0xFC0FC0FF
+    Pink = 0xFC0FC0FF,
 }
 
 const chatTypeConditions = {
     [ChatType.Normal]: (sender: Character, receiver: Character) =>
-        sender.zone.id == receiver.zone.id && receiver.distance(sender.position) < 250,
+        sender.zone.id === receiver.zone.id && receiver.distance(sender.position) < 250,
     [ChatType.GM]: (sender: Character, receiver: Character) =>
         receiver.role > Number(CharacterRole.None)
 }
@@ -99,7 +99,7 @@ type MessageParams = {
 
 export default class Chat {
     owner: Character;
-    
+
     constructor(owner: Character) {
         this.owner = owner;
     }
@@ -136,7 +136,7 @@ export default class Chat {
             senderName = (senderCharacter as Character).nickname;
         }
 
-        if(receiverCharacter) {
+        if (receiverCharacter) {
             receiverCharacter.session.send.chat({
                 subType: chatType,
                 senderId,
@@ -144,21 +144,25 @@ export default class Chat {
                 receiverName: receiverCharacter.nickname,
                 text,
             });
-            
+
             return;
         }
-        else {
-            let characters: Character[] = game.world.filter(GameObjectType.Character, (ch: Character) => chatTypeConditions[chatType](senderCharacter, ch));
-            
-            for(let ch of characters) {
-                ch.session.send.chat({
-                    subType: chatType,
-                    senderId,
-                    senderName,
-                    receiverName: ch.nickname,
-                    text,
-                });
-            }
+
+        // TODO: this should not be here?
+        if (typeof senderCharacter === 'string')
+            return;
+
+        const chatTypeConditionsByType = chatTypeConditions[chatType as keyof typeof chatTypeConditions];
+        const characters = game.world.filter(GameObjectType.Character, (ch: Character) => chatTypeConditionsByType(senderCharacter, ch)) as Character[];
+
+        for (let ch of characters) {
+            ch.session.send.chat({
+                subType: chatType,
+                senderId,
+                senderName,
+                receiverName: ch.nickname,
+                text,
+            });
         }
     }
 

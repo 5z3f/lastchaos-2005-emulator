@@ -62,7 +62,7 @@ type BaseObjectOptions = {
     flags: string[];
 };
 
-class BaseObject {
+export default class BaseObject {
 
     id: number;
     enabled: boolean;
@@ -85,5 +85,3 @@ class BaseObject {
     }
 
 }
-
-export default BaseObject;

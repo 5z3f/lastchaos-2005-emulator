@@ -1,6 +1,8 @@
-import Message from '@local/shared/message';
-import _messages from './_messages.json';
 import log from '@local/shared/logger';
+import Message from '@local/shared/message';
+import type Session from '@local/shared/session';
+import type { SendersType } from '.';
+import _messages from './_messages.json';
 
 export enum AssistMessageType {
     Add,
@@ -17,14 +19,14 @@ interface AssistData {
     remainTime?: number;
 }
 
-export default function (session) {
+export default function (session: Session<SendersType>) {
     return (subType: AssistMessageType, data: AssistData) => {
-        let msg = new Message({ type: _messages.MSG_ASSIST, subType });
+        const msg = new Message({ type: _messages.MSG_ASSIST, subType });
 
-        switch(subType) {
+        switch (subType) {
             case AssistMessageType.Add:
                 msg.write('u8', data.objType);
-                msg.write('i32>', data.objIndex); 
+                msg.write('i32>', data.objIndex);
                 msg.write('i32>', data.itemIndex);
                 msg.write('i32>', data.skillIndex);
                 msg.write('u8', data.skillLevel);

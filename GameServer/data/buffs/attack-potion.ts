@@ -1,8 +1,8 @@
-import Character from "../../src/gameobject/character";
 import api from "../../src/api";
+import Character from "../../src/gameobject/character";
 import { Modifier, ModifierEffectType, ModifierType } from "../../src/system/core/statistic";
 
-let attackPotionModifier = new Modifier(
+const attackPotionModifier = new Modifier(
     ModifierType.Additive, 100, ModifierEffectType.Instant
 );
 
@@ -13,7 +13,7 @@ export default {
     duration: '5 minutes',
     apply: (character: Character, level: number) => {
         api.chat.system(character, 'You have used an Attack Potion.');
-        
+
         return [
             [character.statistics.attack, attackPotionModifier]
         ];
@@ -22,4 +22,3 @@ export default {
         api.chat.system(character, 'Your Attack Potion has expired.');
     },
 }
-

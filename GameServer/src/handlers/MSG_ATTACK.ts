@@ -1,14 +1,14 @@
 import log from '@local/shared/logger';
-import Monster from '../gameobject/monster';
-import Character from '../gameobject/character';
-import game from '../game';
 import Message from '@local/shared/message';
 import Session from '@local/shared/session';
-import { SendersType } from '../senders';
+import game from '../game';
 import { GameObjectType } from '../gameobject';
+import Character from '../gameobject/character';
+import Monster from '../gameobject/monster';
+import { SendersType } from '../senders';
 
 export default function (session: Session<SendersType>, msg: Message) {
-    let data = {
+    const data = {
         attackerObjType: msg.read('u8'),
         attackerIndex: msg.read('i32>'),
         targetObjType: msg.read('u8'),

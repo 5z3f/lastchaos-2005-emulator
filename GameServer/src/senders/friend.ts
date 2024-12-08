@@ -52,7 +52,7 @@ type FriendDataType = ErrorData | RequestData | NotifyAddData | NotifyDeleteData
 
 export default function (session: Session<SendersType>) {
     return (data: FriendDataType) => {
-        let msg = new Message({ type: _messages.MSG_FRIEND, subType: data.subType });
+        const msg = new Message({ type: _messages.MSG_FRIEND, subType: data.subType });
 
         switch (data.subType) {
             case FriendMessageType.Error:

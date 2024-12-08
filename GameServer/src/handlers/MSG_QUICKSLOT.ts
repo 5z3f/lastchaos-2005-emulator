@@ -10,17 +10,16 @@ export enum QuickSlotMessageType {
 }
 
 export default async function (session: Session<SendersType>, msg: Message) {
-    var subTypeMap = {
+    const subTypeMap = {
         1: 'MSG_QUICKSLOT_ADD',
         2: 'MSG_QUICKSLOT_SWAP',
         // TODO: 
     };
 
-    var subType = msg.read('u8');
+    const subType = msg.read('u8');
     console.log('quickslot subtype', subType);
 
-    const subTypeHandler =
-    {
+    const subTypeHandler = {
         MSG_QUICKSLOT_ADD: () => {
             const data = {
                 pageId: msg.read('u8'),
@@ -28,7 +27,7 @@ export default async function (session: Session<SendersType>, msg: Message) {
                 slotType: msg.read('u8'),
             }
 
-            if(data.slotType == 255)
+            if (data.slotType === 255)
                 data.slotType = QuickSlotType.Empty;
 
             if (data.pageId < 0 || data.pageId >= QUICKSLOT_PAGE_NUM || data.slotId < 0 || data.slotId >= QUICKSLOT_MAXSLOT) {
@@ -36,14 +35,15 @@ export default async function (session: Session<SendersType>, msg: Message) {
                 return;
             }
 
+            const character = session.character!;
+
             // IMPORTANT: Check if the moved inventory item is pinned to the quickslot.
             // If it is, send the new slot row and column to prevent crashes.
             // TODO: Implement logic to handle pinned quickslot items.
 
-            switch (data.slotType)
-            {
+            switch (data.slotType) {
                 case QuickSlotType.Empty:
-                    session.character.quickslot.remove({
+                    character.quickslot.remove({
                         pageId: data.pageId,
                         slotId: data.slotId
                     });
@@ -52,7 +52,7 @@ export default async function (session: Session<SendersType>, msg: Message) {
                 case QuickSlotType.Action:
                     const id = msg.read('i32>');
 
-                    session.character.quickslot.add({
+                    character.quickslot.add({
                         pageId: data.pageId,
                         slotId: data.slotId,
                         slotType: data.slotType,
@@ -63,7 +63,7 @@ export default async function (session: Session<SendersType>, msg: Message) {
                     const row = msg.read('u8');
                     const col = msg.read('u8');
 
-                    session.character.quickslot.add({
+                    character.quickslot.add({
                         pageId: data.pageId,
                         slotId: data.slotId,
                         slotType: data.slotType,
@@ -87,7 +87,9 @@ export default async function (session: Session<SendersType>, msg: Message) {
                 return;
             }
 
-            session.character.quickslot.swap({
+            const character = session.character!;
+
+            character.quickslot.swap({
                 pageId: data.pageId,
                 slotIdFrom: data.slotIdFrom,
                 slotIdTo: data.slotIdTo
@@ -95,6 +97,7 @@ export default async function (session: Session<SendersType>, msg: Message) {
         }
     }
 
-    if(subTypeMap[subType] in subTypeHandler)
-        subTypeHandler[subTypeMap[subType]]();
+    const subType1 = subTypeMap[subType as keyof typeof subTypeMap];
+    if (subType1 in subTypeHandler)
+        subTypeHandler[subType1 as keyof typeof subTypeHandler]();
 }

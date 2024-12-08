@@ -19,16 +19,14 @@ export default function (session: Session<SendersType>, msg: Message) {
         layer: msg.read('u8'), // 8e
     };
 
-    let moveTypeMap = {
+    const moveTypeMap = {
         0: 'MSG_MOVE_WALK',
         1: 'MSG_MOVE_RUN',
         2: 'MSG_MOVE_PLACE',
         3: 'MSG_MOVE_STOP',
     };
 
-    let character = session.character;
-    if (!character)
-        return;
+    const character = session.character!;
 
     if (character.uid != data.uid) {
         // TODO: sorcerer summoners
@@ -36,7 +34,7 @@ export default function (session: Session<SendersType>, msg: Message) {
         return;
     }
 
-    let newPosition = new Position(
+    const newPosition = new Position(
         parseFloat(data.x.toFixed(1)),
         parseFloat(data.y.toFixed(1)),
         parseFloat(data.z.toFixed(1)),
@@ -57,7 +55,7 @@ export default function (session: Session<SendersType>, msg: Message) {
             //     r: data.r,
             //     layer: data.layer
             // };
-// 
+            // 
             // // @ts-ignore
             // session.send.move(data)
             //log.data(`[MOVE RUN] uid: ${ data.uid } [from: (${ character.position.x }, ${ character.position.y }) to (${ newPosition.x }, ${ newPosition.y })]`)
@@ -80,11 +78,11 @@ export default function (session: Session<SendersType>, msg: Message) {
         uid: data.uid,
         speed: 0.0,
         position: {
-            x: session.character.position.x,
-            y: session.character.position.y,
-            z: session.character.position.z,
-            r: session.character.position.r,
-            layer: session.character.position.layer,
+            x: character.position.x,
+            y: character.position.y,
+            z: character.position.z,
+            r: character.position.r,
+            layer: character.position.layer,
         },
         attribute: 0,
     })

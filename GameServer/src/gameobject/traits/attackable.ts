@@ -1,9 +1,10 @@
 import log from "@local/shared/logger";
-import Monster from "../monster";
+import type { MessageDamageType } from "../../senders/damage";
 import Character from "../character";
+import Monster from "../monster";
 import NPC from "../npc";
 
-class Attackable {
+export default class Attackable {
     owner;
 
     constructor(owner: Character | Monster | NPC) {
@@ -11,7 +12,7 @@ class Attackable {
     }
 
     damage(attacker: Character) {
-        let owner = this.owner;
+        const owner = this.owner;
         owner.statistics.health -= attacker.statistics.attack.getTotalValue();
         attacker.statistics.health -= owner.statistics.attack.getTotalValue();
 
@@ -21,7 +22,7 @@ class Attackable {
         attacker.session.send.damage({
             attackerObjType: 0,
             attackerIndex: attacker.uid,
-            damageType: 3,
+            damageType: 3 as MessageDamageType, // ?
             skillId: -1,
             targetObjType: 1,
             targetIndex: owner.uid,
@@ -61,6 +62,3 @@ class Attackable {
         }
     }
 }
-
-
-export default Attackable;
